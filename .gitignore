@@ -1,18 +1,25 @@
-# .NET
+# .NET build
 bin/
 obj/
 *.user
 *.suo
 
-# Node / Tailwind
-node_modules/
-wwwroot/css/output.css
-package-lock.json
+# Logs
+Logs/
+*.log
 
-# VS Code
+# Tailwind / Node (dans le projet Web)
+src/MedManager.Web/node_modules/
+src/MedManager.Web/package-lock.json
+src/MedManager.Web/wwwroot/css/tailwind.css
+
+# Local-only settings (ne jamais push)
+src/MedManager.Web/appsettings.Local.json
+
+# IDEs
 .vscode/*
 !.vscode/settings.json
 
-# Logs / Temp
-Logs/
-*.log
+# OS stuff
+.DS_Store
+Thumbs.db
