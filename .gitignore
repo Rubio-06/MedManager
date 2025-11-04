@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Node / Tailwind
+node_modules/
+wwwroot/css/output.css
+package-lock.json
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+
+# Logs / Temp
+Logs/
+*.log

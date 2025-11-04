@@ -1,0 +1,17 @@
+{
+  "name": "medmanager.web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "css:build": "@tailwindcss -i ./wwwroot/css/tailwind.css -o ./wwwroot/css/style.css --minify",
+    "css:watch": "@tailwindcss -i ./wwwroot/css/tailwind.css -o ./wwwroot/css/style.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.16",
+    "tailwindcss": "^4.1.16"
+  }
+}
