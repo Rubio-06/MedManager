@@ -1,0 +1,194 @@
+/* ============================================
+   MedManager - Custom Styles
+   Couleurs cohérentes et curseurs
+   ============================================ */
+
+/* Boutons Primary (Indigo) */
+.btn-primary {
+  background-color: rgb(79, 70, 229); /* indigo-600 */
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: rgb(67, 56, 202); /* indigo-700 */
+}
+
+/* Boutons Danger (Rouge) - Suppression et Déconnexion */
+.btn-danger {
+  background-color: rgb(239, 68, 68); /* red-500 */
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-danger:hover {
+  background-color: rgb(220, 38, 38); /* red-600 */
+}
+
+/* Boutons Secondary (Gris) */
+.btn-secondary {
+  background-color: rgb(229, 231, 235); /* gray-200 */
+  color: rgb(55, 65, 81); /* gray-700 */
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-secondary:hover {
+  background-color: rgb(209, 213, 219); /* gray-300 */
+}
+
+/* Liens cliquables */
+a {
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+/* Boutons généraux */
+button {
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Inputs et Select */
+input,
+select,
+textarea {
+  cursor: text;
+  transition: all 0.15s ease-in-out;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+/* Éléments interactifs */
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Cards cliquables */
+.card-hover {
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Lignes de tableau cliquables */
+tr.clickable {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+tr.clickable:hover {
+  background-color: rgb(249, 250, 251); /* gray-50 */
+}
+
+/* Icônes d'action */
+.action-icon {
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.action-icon-edit {
+  color: rgb(79, 70, 229); /* indigo-600 */
+}
+
+.action-icon-edit:hover {
+  color: rgb(49, 46, 129); /* indigo-900 */
+}
+
+.action-icon-delete {
+  color: rgb(239, 68, 68); /* red-500 */
+}
+
+.action-icon-delete:hover {
+  color: rgb(153, 27, 27); /* red-900 */
+}
+
+/* Dropup Animation */
+.dropup-enter {
+  animation: dropup-enter 0.2s ease-out;
+}
+
+@keyframes dropup-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Rotation Icon Animation */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Focus States */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: 2px solid rgb(99, 102, 241); /* indigo-500 */
+  outline-offset: 2px;
+}
+
+/* Hover states pour les sidebar links */
+.sidebar-link {
+  cursor: pointer !important;
+}
+
+/* Uniformisation des transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Couleurs cohérentes pour les badges */
+.badge-primary {
+  background-color: rgb(238, 242, 255); /* indigo-100 */
+  color: rgb(55, 48, 163); /* indigo-800 */
+}
+
+.badge-danger {
+  background-color: rgb(254, 226, 226); /* red-100 */
+  color: rgb(153, 27, 27); /* red-800 */
+}
+
+.badge-success {
+  background-color: rgb(220, 252, 231); /* green-100 */
+  color: rgb(22, 101, 52); /* green-800 */
+}
+
+.badge-warning {
+  background-color: rgb(254, 249, 195); /* yellow-100 */
+  color: rgb(133, 77, 14); /* yellow-800 */
+}
+
+/* Amélioration des focus pour accessibilité */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgb(99, 102, 241);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}

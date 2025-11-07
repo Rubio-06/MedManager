@@ -1,0 +1,344 @@
+@model IEnumerable<MedManager.Web.Models.ViewModels.AllergyListItemViewModel>
+
+@{
+    ViewData["Title"] = "Gestion des Allergies";
+    Layout = "_ManagementLayout";
+    var totalAllergies = Model.Count();
+    var totalPatients = Model.Sum(a => a.PatientCount);
+}
+
+<div>
+        <!-- En-tête -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Gestion des Allergies</h1>
+            <p class="mt-1 text-gray-600">
+                Gérez les allergies pour assurer la sécurité des patients et la prescription appropriée des médicaments.
+            </p>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <p class="text-sm font-medium text-gray-500">Total des allergies</p>
+                        <p class="text-2xl font-semibold text-gray-900">@totalAllergies</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-100 rounded-lg p-3">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <p class="text-sm font-medium text-gray-500">Patients concernés</p>
+                        <p class="text-2xl font-semibold text-gray-900">@totalPatients</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barre de recherche, filtres et bouton -->
+        <div class="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <div class="flex flex-1 gap-3 flex-wrap">
+                <!-- Barre de recherche -->
+                <div class="relative flex-1 min-w-[250px]">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text" 
+                           id="searchInput" 
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 sm:text-sm transition duration-150"
+                           placeholder="Rechercher une allergie (nom, description)...">
+                </div>
+
+                <!-- Dropdown Tri Alphabétique -->
+                <div class="relative">
+                    <button type="button" id="sortAlphaDropdownButton" 
+                            class="inline-flex items-center justify-between w-full sm:w-36 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition duration-150">
+                        <span id="sortAlphaDropdownText">A-Z</span>
+                        <svg class="w-4 h-4 ml-2 transition-transform duration-150" id="sortAlphaDropdownIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div id="sortAlphaDropdownMenu" class="hidden absolute z-10 mt-2 w-full sm:w-36 bg-white border border-gray-200 rounded-lg shadow-lg">
+                        <ul class="py-1">
+                            <li>
+                                <button type="button" onclick="sortAllergies('asc')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                    A-Z
+                                </button>
+                            </li>
+                            <li>
+                                <button type="button" onclick="sortAllergies('desc')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                    Z-A
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton Ajouter -->
+            <a asp-action="CreateAllergy" 
+               class="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium inline-flex items-center justify-center cursor-pointer shrink-0">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Ajouter une allergie
+            </a>
+        </div>
+
+        <!-- Tableau des allergies -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-indigo-900">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                Nom
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                Description
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                Patients
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @if (Model.Any())
+                        {
+                            @foreach (var allergy in Model)
+                            {
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="shrink-0 h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">@allergy.Name</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-gray-600 max-w-md">
+                                            @(string.IsNullOrEmpty(allergy.Description) ? "-" : allergy.Description)
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            @allergy.PatientCount patient@(allergy.PatientCount > 1 ? "s" : "")
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-3">
+                                            <a asp-action="EditAllergy" asp-route-id="@allergy.Id" 
+                                               class="text-blue-600 hover:text-blue-900 transition duration-150"
+                                               title="Modifier">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                            </a>
+                                            <button type="button" 
+                                                    onclick="confirmAllergyDelete(@allergy.Id, '@allergy.Name', @allergy.PatientCount)"
+                                                    class="text-red-600 hover:text-red-900 transition duration-150"
+                                                    title="Supprimer">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-400">
+                                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <p class="text-xl font-medium">Aucune allergie enregistrée</p>
+                                        <p class="text-sm mt-2">Commencez par ajouter une allergie</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Message "Aucun résultat" pour la recherche -->
+            <div id="noResults" style="display: none;" class="p-12 text-center">
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun résultat</h3>
+                <p class="text-gray-600">Aucune allergie ne correspond à votre recherche.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire de suppression caché -->
+<form id="deleteAllergyForm" asp-action="DeleteAllergy" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="deleteAllergyId" name="id" />
+</form>
+
+@section Scripts {
+    <script>
+        function confirmAllergyDelete(allergyId, allergyName, patientCount) {
+            if (patientCount > 0) {
+                showConfirmDialog(
+                    'Suppression impossible',
+                    `Impossible de supprimer "${allergyName}" car elle est associée à ${patientCount} patient(s).`,
+                    'J\'ai compris',
+                    '',
+                    function() {}
+                );
+            } else {
+                showConfirmDialog(
+                    'Confirmer la suppression',
+                    `Êtes-vous sûr de vouloir supprimer l'allergie "${allergyName}" ?<br><br>Cette action est irréversible.`,
+                    'Supprimer',
+                    'Annuler',
+                    function() {
+                        document.getElementById('deleteAllergyId').value = allergyId;
+                        document.getElementById('deleteAllergyForm').submit();
+                    }
+                );
+            }
+        }
+
+        // Variables globales pour les filtres
+        let currentSort = 'asc';
+
+        // Gestion des dropdowns
+        function toggleDropdown(dropdownId, buttonId, iconId) {
+            const dropdown = document.getElementById(dropdownId);
+            const icon = document.getElementById(iconId);
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            // Toggle le dropdown actuel
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Fonction de tri alphabétique
+        function sortAllergies(direction) {
+            currentSort = direction;
+            
+            // Mettre à jour le texte du dropdown alphabétique
+            const sortAlphaText = document.getElementById('sortAlphaDropdownText');
+            sortAlphaText.textContent = direction === 'asc' ? 'A-Z' : 'Z-A';
+            
+            // Fermer le dropdown
+            document.getElementById('sortAlphaDropdownMenu').classList.add('hidden');
+            document.getElementById('sortAlphaDropdownIcon').style.transform = 'rotate(0deg)';
+            
+            applySorting();
+        }
+
+        // Fonction d'application du tri
+        function applySorting() {
+            const tbody = document.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                const nameA = a.querySelector('.text-sm.font-medium')?.textContent.toLowerCase() || '';
+                const nameB = b.querySelector('.text-sm.font-medium')?.textContent.toLowerCase() || '';
+                return currentSort === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+            applyFilters();
+        }
+
+        // Fonction d'application des filtres de recherche
+        function applyFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const tableRows = document.querySelectorAll('tbody tr');
+            const noResultsMessage = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            tableRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                
+                // Vérifier le filtre de recherche
+                const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                
+                // Afficher ou masquer la ligne
+                if (matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Afficher/masquer le message "Aucun résultat"
+            if (noResultsMessage) {
+                if (visibleCount === 0 && searchTerm !== '') {
+                    noResultsMessage.style.display = '';
+                } else {
+                    noResultsMessage.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+
+            // Event listener pour le dropdown
+            const sortAlphaDropdownButton = document.getElementById('sortAlphaDropdownButton');
+
+            if (sortAlphaDropdownButton) {
+                sortAlphaDropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown('sortAlphaDropdownMenu', 'sortAlphaDropdownButton', 'sortAlphaDropdownIcon');
+                });
+            }
+
+            // Fermer le dropdown quand on clique ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#sortAlphaDropdownButton')) {
+                    const menu = document.getElementById('sortAlphaDropdownMenu');
+                    const icon = document.getElementById('sortAlphaDropdownIcon');
+                    if (menu) menu.classList.add('hidden');
+                    if (icon) icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+    </script>
+}

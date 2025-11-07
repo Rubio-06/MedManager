@@ -1,0 +1,369 @@
+@model MedManager.Web.Models.ViewModels.CreatePrescriptionViewModel
+
+@{
+    ViewData["Title"] = "Créer une Ordonnance";
+    Layout = "_ManagementLayout";
+}
+
+<div>
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Créer une Ordonnance</h1>
+        <p class="text-gray-600 mt-1">Prescription médicale</p>
+    </div>
+
+    <form id="prescriptionForm" asp-action="CreatePrescription" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="patientId" value="@Model.PatientId" />
+        <input type="hidden" id="medicinesData" name="medicines" value="[]" />
+
+        <!-- Template Ordonnance -->
+        <div class="bg-white rounded-lg shadow-md p-8 mb-6">
+            <!-- En-tête de l'ordonnance -->
+            <div class="border-b-2 border-gray-300 pb-6 mb-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Informations Médecin -->
+                    <div>
+                        <h2 class="text-lg font-bold text-indigo-900 mb-3">Médecin Prescripteur</h2>
+                        <div class="space-y-2">
+                            <p class="text-gray-700"><span class="font-semibold">Dr.</span> @Model.DoctorFirstName @Model.DoctorLastName</p>
+                            <p class="text-gray-600 text-sm">@Model.DoctorSpecialty</p>
+                        </div>
+                    </div>
+
+                    <!-- Informations Patient -->
+                    <div>
+                        <h2 class="text-lg font-bold text-indigo-900 mb-3">Patient</h2>
+                        <div class="space-y-2">
+                            <p class="text-gray-700"><span class="font-semibold">Nom:</span> @Model.PatientFirstName @Model.PatientLastName</p>
+                            <p class="text-gray-600 text-sm"><span class="font-semibold">Âge:</span> @Model.PatientAge ans • <span class="font-semibold">Sexe:</span> @Model.PatientGender</p>
+                            <p class="text-gray-600 text-sm"><span class="font-semibold">N° Sécu:</span> @Model.SocialSecurityNumber</p>
+                            <p class="text-gray-600 text-sm"><span class="font-semibold">Email:</span> @Model.PatientEmail</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date -->
+                <div class="mt-4 text-right">
+                    <p class="text-gray-600 text-sm">Date: <span class="font-semibold">@DateTime.Now.ToString("dd/MM/yyyy")</span></p>
+                </div>
+            </div>
+
+            <!-- Allergies du patient -->
+            @if (Model.PatientAllergies.Any())
+            {
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-6 h-6 text-red-600 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-bold text-red-900 mb-2">ALLERGIES DU PATIENT</h3>
+                            <ul class="text-sm text-red-800 space-y-1">
+                                @foreach (var allergy in Model.PatientAllergies)
+                                {
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>@allergy.Name</strong> @(!string.IsNullOrEmpty(allergy.Description) ? $"- {allergy.Description}" : "")</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Section Prescriptions -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Prescriptions</h2>
+                    <button type="button" onclick="openMedicineModal()" 
+                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Ajouter un médicament
+                    </button>
+                </div>
+
+                <!-- Liste des médicaments ajoutés -->
+                <div id="medicinesList" class="space-y-3">
+                    <!-- Les médicaments seront ajoutés ici par JavaScript -->
+                    <div id="emptyMessage" class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        </svg>
+                        <p class="text-gray-600 font-medium">Aucun médicament ajouté</p>
+                        <p class="text-gray-500 text-sm mt-1">Cliquez sur "Ajouter un médicament" pour commencer</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signature -->
+            <div class="border-t-2 border-gray-300 pt-6 mt-8">
+                <div class="text-right">
+                    <p class="text-gray-700 font-semibold mb-2">Signature et cachet du médecin</p>
+                    <div class="inline-block border-2 border-gray-300 rounded px-8 py-4 mt-2">
+                        <p class="text-gray-600 italic">Dr. @Model.DoctorFirstName @Model.DoctorLastName</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="flex justify-end space-x-3">
+            <a asp-action="Prescriptions" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                Annuler
+            </a>
+            <button type="submit" id="submitBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                Créer l'ordonnance
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Ajouter Médicament -->
+<div id="medicineModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        <!-- Header Modal -->
+        <div class="bg-indigo-600 text-white px-6 py-4 flex items-center justify-between">
+            <h3 class="text-xl font-bold">Ajouter un médicament</h3>
+            <button type="button" onclick="closeMedicineModal()" class="text-white hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Body Modal -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+            <!-- Barre de recherche -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Rechercher un médicament</label>
+                <div class="relative">
+                    <input type="text" id="medicineSearch" 
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                           placeholder="Nom du médicament..."
+                           oninput="filterMedicines()">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des médicaments -->
+            <div id="medicineSearchResults" class="space-y-2 mb-6 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                @foreach (var medicine in Model.AvailableMedicines)
+                {
+                    <div class="medicine-item p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
+                         data-id="@medicine.Id"
+                         data-name="@medicine.Name"
+                         data-composition="@medicine.Composition"
+                         onclick="selectMedicine(this)">
+                        <p class="font-semibold text-gray-900">@medicine.Name</p>
+                        @if (!string.IsNullOrEmpty(medicine.Composition))
+                        {
+                            <p class="text-sm text-gray-600 mt-1"><span class="font-medium">Composition:</span> @medicine.Composition</p>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Formulaire détails médicament -->
+            <div id="medicineDetailsForm" style="display: none;" class="bg-gray-50 rounded-lg p-4 space-y-4">
+                <input type="hidden" id="selectedMedicineId" />
+                <input type="hidden" id="selectedMedicineName" />
+                <input type="hidden" id="selectedMedicineComposition" />
+
+                <div class="bg-indigo-50 border-l-4 border-indigo-600 p-3 mb-4">
+                    <p class="font-semibold text-indigo-900" id="selectedMedicineDisplay"></p>
+                    <p class="text-sm text-indigo-700 mt-1" id="selectedCompositionDisplay"></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantité (boîtes)</label>
+                    <input type="number" id="medicineQuantity" min="1" value="1"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Posologie</label>
+                    <input type="text" id="medicineDosage" placeholder="Ex: 1 comprimé 3 fois par jour"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Instructions (optionnel)</label>
+                    <textarea id="medicineInstructions" rows="3" placeholder="Ex: À prendre pendant les repas"
+                              class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t">
+            <button type="button" onclick="closeMedicineModal()" 
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                Annuler
+            </button>
+            <button type="button" onclick="addMedicineToList()" id="addMedicineBtn" disabled
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed">
+                Ajouter à l'ordonnance
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let medicines = [];
+
+        function openMedicineModal() {
+            document.getElementById('medicineModal').classList.remove('hidden');
+            document.getElementById('medicineSearch').value = '';
+            document.getElementById('medicineDetailsForm').style.display = 'none';
+            document.getElementById('addMedicineBtn').disabled = true;
+            filterMedicines();
+        }
+
+        function closeMedicineModal() {
+            document.getElementById('medicineModal').classList.add('hidden');
+        }
+
+        function filterMedicines() {
+            const searchTerm = document.getElementById('medicineSearch').value.toLowerCase();
+            const items = document.querySelectorAll('.medicine-item');
+            
+            items.forEach(item => {
+                const name = item.getAttribute('data-name').toLowerCase();
+                if (name.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function selectMedicine(element) {
+            // Retirer la sélection précédente
+            document.querySelectorAll('.medicine-item').forEach(item => {
+                item.classList.remove('bg-indigo-100', 'border-indigo-600');
+            });
+
+            // Sélectionner l'élément actuel
+            element.classList.add('bg-indigo-100', 'border-indigo-600');
+
+            const id = element.getAttribute('data-id');
+            const name = element.getAttribute('data-name');
+            const composition = element.getAttribute('data-composition');
+
+            document.getElementById('selectedMedicineId').value = id;
+            document.getElementById('selectedMedicineName').value = name;
+            document.getElementById('selectedMedicineComposition').value = composition;
+            document.getElementById('selectedMedicineDisplay').textContent = name;
+            document.getElementById('selectedCompositionDisplay').textContent = composition ? 'Composition: ' + composition : '';
+
+            document.getElementById('medicineDetailsForm').style.display = 'block';
+            document.getElementById('addMedicineBtn').disabled = false;
+
+            // Reset des champs
+            document.getElementById('medicineQuantity').value = 1;
+            document.getElementById('medicineDosage').value = '';
+            document.getElementById('medicineInstructions').value = '';
+        }
+
+        function addMedicineToList() {
+            const id = parseInt(document.getElementById('selectedMedicineId').value);
+            const name = document.getElementById('selectedMedicineName').value;
+            const composition = document.getElementById('selectedMedicineComposition').value;
+            const quantity = parseInt(document.getElementById('medicineQuantity').value);
+            const dosage = document.getElementById('medicineDosage').value;
+            const instructions = document.getElementById('medicineInstructions').value;
+
+            if (!dosage) {
+                alert('Veuillez indiquer la posologie');
+                return;
+            }
+
+            // Vérifier si déjà ajouté
+            if (medicines.some(m => m.medicineId === id)) {
+                alert('Ce médicament est déjà dans l\'ordonnance');
+                return;
+            }
+
+            const medicine = {
+                medicineId: id,
+                medicineName: name,
+                composition: composition,
+                quantity: quantity,
+                dosage: dosage,
+                instructions: instructions
+            };
+
+            medicines.push(medicine);
+            updateMedicinesList();
+            closeMedicineModal();
+        }
+
+        function removeMedicine(index) {
+            medicines.splice(index, 1);
+            updateMedicinesList();
+        }
+
+        function updateMedicinesList() {
+            const container = document.getElementById('medicinesList');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            if (medicines.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+            
+            let html = '';
+            medicines.forEach((med, index) => {
+                html += `
+                    <div class="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    <span class="bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded mr-3">${index + 1}</span>
+                                    <h3 class="text-lg font-bold text-gray-900">${med.medicineName}</h3>
+                                </div>
+                                ${med.composition ? `<p class="text-sm text-gray-600 mb-2"><span class="font-medium">Composition:</span> ${med.composition}</p>` : ''}
+                                <div class="space-y-1 text-sm">
+                                    <p class="text-gray-700"><span class="font-semibold">Quantité:</span> ${med.quantity} boîte(s)</p>
+                                    <p class="text-gray-700"><span class="font-semibold">Posologie:</span> ${med.dosage}</p>
+                                    ${med.instructions ? `<p class="text-gray-700"><span class="font-semibold">Instructions:</span> ${med.instructions}</p>` : ''}
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeMedicine(${index})" 
+                                    class="ml-4 text-red-600 hover:text-red-800 transition">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            
+            // Mettre à jour le champ caché avec les données JSON
+            document.getElementById('medicinesData').value = JSON.stringify(medicines);
+        }
+
+        // Validation avant soumission
+        document.getElementById('prescriptionForm').addEventListener('submit', function(e) {
+            if (medicines.length === 0) {
+                e.preventDefault();
+                alert('Veuillez ajouter au moins un médicament à l\'ordonnance');
+                return false;
+            }
+        });
+    </script>
+}

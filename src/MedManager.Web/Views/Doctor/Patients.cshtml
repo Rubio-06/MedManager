@@ -1,0 +1,763 @@
+@model List<MedManager.Web.Models.ViewModels.PatientListItemViewModel>
+
+@{
+    ViewData["Title"] = "Mes Patients";
+    Layout = "_ManagementLayout";
+}
+
+<div>
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Mes Patients</h1>
+        <p class="text-gray-600 mt-1">Gérez vos patients et leur suivi médical</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Total Patients</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Emails Confirmés</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Count(p => p.EmailConfirmed)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Prescriptions Totales</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Sum(p => p.PrescriptionCount)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barre de recherche, filtres et bouton -->
+    <div class="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div class="flex flex-1 gap-3 flex-wrap">
+            <!-- Barre de recherche -->
+            <div class="relative flex-1 min-w-[250px]">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" 
+                       id="searchInput" 
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 sm:text-sm transition duration-150"
+                       placeholder="Rechercher un patient (nom, prénom, email)...">
+            </div>
+
+            <!-- Dropdown Genre -->
+            <div class="relative">
+                <button type="button" id="genderDropdownButton" 
+                        class="inline-flex items-center justify-between w-full sm:w-40 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition duration-150">
+                    <span id="genderDropdownText">Tous les genres</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform duration-150" id="genderDropdownIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="genderDropdownMenu" class="hidden absolute z-10 mt-2 w-full sm:w-40 bg-white border border-gray-200 rounded-lg shadow-lg">
+                    <ul class="py-1">
+                        <li>
+                            <button type="button" onclick="filterByGender('all')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Tous
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="filterByGender('Male')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Hommes
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="filterByGender('Female')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Femmes
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Dropdown Âge -->
+            <div class="relative">
+                <button type="button" id="ageDropdownButton" 
+                        class="inline-flex items-center justify-between w-full sm:w-40 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition duration-150">
+                    <span id="ageDropdownText">Tous les âges</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform duration-150" id="ageDropdownIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="ageDropdownMenu" class="hidden absolute z-10 mt-2 w-full sm:w-40 bg-white border border-gray-200 rounded-lg shadow-lg">
+                    <ul class="py-1">
+                        <li>
+                            <button type="button" onclick="filterByAge('all')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Tous
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="filterByAge('0-18')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                0-18 ans
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="filterByAge('19-60')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                19-60 ans
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="filterByAge('60+')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                60+ ans
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Dropdown Tri -->
+            <div class="relative">
+                <button type="button" id="sortDropdownButton" 
+                        class="inline-flex items-center justify-between w-full sm:w-32 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition duration-150">
+                    <span id="sortDropdownText">A-Z</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform duration-150" id="sortDropdownIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="sortDropdownMenu" class="hidden absolute z-10 mt-2 w-full sm:w-32 bg-white border border-gray-200 rounded-lg shadow-lg">
+                    <ul class="py-1">
+                        <li>
+                            <button type="button" onclick="sortPatients('asc')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                A-Z
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="sortPatients('desc')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Z-A
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bouton Nouveau Patient -->
+        <a asp-action="CreatePatient" 
+           class="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium inline-flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Nouveau Patient
+        </a>
+    </div>
+
+    <!-- Barre d'actions pour le patient sélectionné -->
+    <div id="bulkActionsBar" style="display: none;" class="bg-white border-2 border-indigo-200 rounded-lg shadow-md p-4 mb-4 flex items-center justify-between">
+        <div class="flex items-center">
+            <span id="selectedCount" class="font-semibold text-gray-700">1 patient sélectionné</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="bulkViewProfile()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium inline-flex items-center text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                Consulter profil
+            </button>
+            <button onclick="bulkCreatePrescription()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium inline-flex items-center text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Créer ordonnance
+            </button>
+            <button onclick="bulkEditPatient()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium inline-flex items-center text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Modifier
+            </button>
+            <button onclick="bulkRemoveDoctor()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium inline-flex items-center text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12h-6"/>
+                </svg>
+                Retirer médecin
+            </button>
+            <button onclick="bulkDeletePatients()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium inline-flex items-center text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Supprimer
+            </button>
+        </div>
+    </div>
+
+    <!-- Patients Table -->
+    @if (Model.Any())
+    {
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-indigo-900">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                            Patient
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                            Email
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                            Genre
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                            Âge
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                            Prescriptions
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                            Allergies
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var patient in Model)
+                    {
+                        <tr class="hover:bg-gray-50 transition-colors cursor-pointer patient-row" 
+                            data-gender="@patient.Gender" 
+                            data-age="@patient.Age" 
+                            data-patient-id="@patient.Id"
+                            data-patient-name="@patient.FirstName @patient.LastName"
+                            data-prescription-count="@patient.PrescriptionCount"
+                            onclick="selectPatient(this, event)"
+                            ondblclick="openPatientProfile(@patient.Id)">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span class="text-blue-600 font-semibold">@patient.FirstName.Substring(0, 1).ToUpper()@patient.LastName.Substring(0, 1).ToUpper()</span>
+                                    </div>
+                                    <div class="ml-4">
+                                        <a asp-action="PatientProfile" asp-route-id="@patient.Id" 
+                                           class="text-sm font-medium text-indigo-600 hover:text-indigo-900 transition duration-150">
+                                            @patient.FirstName @patient.LastName
+                                        </a>
+                                        @if (patient.EmailConfirmed)
+                                        {
+                                            <div class="text-xs text-green-600 flex items-center">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Vérifié
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">@patient.Email</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(patient.Gender == MedManager.Domain.Models.Users.Gender.Male ? "bg-blue-100 text-blue-800" : "bg-pink-100 text-pink-800")">
+                                    @if (patient.Gender == MedManager.Domain.Models.Users.Gender.Male)
+                                    {
+                                        <span>Homme</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Femme</span>
+                                    }
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    <span>@patient.Age ans</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    @patient.PrescriptionCount
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(patient.AllergyCount > 0 ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800")">
+                                    @patient.AllergyCount
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex justify-end space-x-3">
+                                    <a asp-action="EditPatient" asp-route-id="@patient.Id" 
+                                       class="text-blue-600 hover:text-blue-900 transition duration-150"
+                                       title="Modifier">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </a>
+                                    <form asp-action="DeletePatient" asp-route-id="@patient.Id" method="post" class="inline" data-patient-name="@patient.FirstName @patient.LastName" data-prescription-count="@patient.PrescriptionCount">
+                                        @Html.AntiForgeryToken()
+                                        <button type="button" onclick="confirmPatientDelete(this.form)" 
+                                                class="text-red-600 hover:text-red-900 transition duration-150"
+                                                title="Supprimer">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            
+            <!-- Message "Aucun résultat" pour la recherche -->
+            <div id="noResults" style="display: none;" class="p-12 text-center">
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun résultat</h3>
+                <p class="text-gray-600">Aucun patient ne correspond à votre recherche.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun patient</h3>
+            <p class="text-gray-600 mb-6">Commencez par ajouter votre premier patient.</p>
+            <a asp-action="CreatePatient" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Ajouter un Patient
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        let selectedRow = null;
+        let clickTimer = null;
+
+        // Sélection d'un patient (simple clic)
+        function selectPatient(row, event) {
+            // Empêcher la sélection si on clique sur un bouton d'action
+            if (event.target.closest('a') || event.target.closest('button') || event.target.closest('form')) {
+                return;
+            }
+
+            // Empêcher la propagation pour éviter le clic en dehors
+            event.stopPropagation();
+
+            // Désélectionner l'ancienne ligne
+            if (selectedRow && selectedRow !== row) {
+                selectedRow.classList.remove('bg-indigo-50', 'border-l-4', 'border-indigo-600');
+            }
+
+            // Sélectionner la nouvelle ligne (toujours sélectionner, jamais désélectionner au clic)
+            selectedRow = row;
+            row.classList.add('bg-indigo-50', 'border-l-4', 'border-indigo-600');
+            updateBulkActions();
+        }
+
+        // Ouvrir le profil (double-clic)
+        function openPatientProfile(patientId) {
+            window.location.href = `/Doctor/PatientProfile/${patientId}`;
+        }
+
+        // Désélectionner quand on clique en dehors du tableau
+        document.addEventListener('click', function(event) {
+            // Vérifier si le clic est en dehors du tableau et de la barre d'actions
+            const table = document.querySelector('table');
+            const bulkActionsBar = document.getElementById('bulkActionsBar');
+            
+            if (!event.target.closest('table') && !event.target.closest('#bulkActionsBar')) {
+                if (selectedRow) {
+                    selectedRow.classList.remove('bg-indigo-50', 'border-l-4', 'border-indigo-600');
+                    selectedRow = null;
+                    updateBulkActions();
+                }
+            }
+        });
+
+        function updateBulkActions() {
+            const bulkActionsBar = document.getElementById('bulkActionsBar');
+            
+            if (selectedRow) {
+                bulkActionsBar.style.display = 'flex';
+            } else {
+                bulkActionsBar.style.display = 'none';
+            }
+        }
+
+        // Actions sur le patient sélectionné
+        function bulkViewProfile() {
+            if (selectedRow) {
+                const patientId = selectedRow.getAttribute('data-patient-id');
+                window.location.href = `/Doctor/PatientProfile/${patientId}`;
+            }
+        }
+
+        function bulkCreatePrescription() {
+            if (selectedRow) {
+                const patientId = selectedRow.getAttribute('data-patient-id');
+                window.location.href = `/Doctor/CreatePrescription?patientId=${patientId}`;
+            }
+        }
+
+        function bulkEditPatient() {
+            if (selectedRow) {
+                const patientId = selectedRow.getAttribute('data-patient-id');
+                window.location.href = `/Doctor/EditPatient/${patientId}`;
+            }
+        }
+
+        function bulkRemoveDoctor() {
+            if (!selectedRow) return;
+            
+            const patientName = selectedRow.getAttribute('data-patient-name');
+            const patientId = selectedRow.getAttribute('data-patient-id');
+            
+            showConfirmDialog(
+                'Retirer le médecin traitant',
+                `Êtes-vous sûr de vouloir vous retirer en tant que médecin traitant pour <strong>${patientName}</strong> ?<br><br>Le patient restera dans le système mais ne sera plus associé à vous.`,
+                'Confirmer',
+                'Annuler',
+                function() {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/Doctor/RemoveDoctorFromPatients';
+                    
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    form.appendChild(tokenInput);
+                    
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'patientIds';
+                    input.value = patientId;
+                    form.appendChild(input);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            );
+        }
+
+        function bulkDeletePatients() {
+            if (!selectedRow) return;
+            
+            const prescriptionCount = parseInt(selectedRow.getAttribute('data-prescription-count'));
+            const patientName = selectedRow.getAttribute('data-patient-name');
+            const patientId = selectedRow.getAttribute('data-patient-id');
+            
+            if (prescriptionCount > 0) {
+                showConfirmDialog(
+                    'Suppression impossible',
+                    `Impossible de supprimer <strong>${patientName}</strong> car ce patient possède ${prescriptionCount} prescription(s).`,
+                    'J\'ai compris',
+                    '',
+                    function() {}
+                );
+                return;
+            }
+            
+            showConfirmDialog(
+                'Confirmer la suppression',
+                `Êtes-vous sûr de vouloir supprimer le patient <strong>${patientName}</strong> ?<br><br>Cette action est irréversible.`,
+                'Supprimer',
+                'Annuler',
+                function() {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/Doctor/DeletePatients';
+                    
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    form.appendChild(tokenInput);
+                    
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'patientIds';
+                    input.value = patientId;
+                    form.appendChild(input);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            );
+        }
+
+        function confirmPatientDelete(form) {
+            const patientName = form.getAttribute('data-patient-name');
+            const prescriptionCount = parseInt(form.getAttribute('data-prescription-count'));
+            
+            if (prescriptionCount > 0) {
+                showConfirmDialog(
+                    'Suppression impossible',
+                    `Impossible de supprimer "${patientName}" car ce patient possède ${prescriptionCount} prescription(s).`,
+                    'J\'ai compris',
+                    '',
+                    function() {}
+                );
+            } else {
+                showConfirmDialog(
+                    'Confirmer la suppression',
+                    `Êtes-vous sûr de vouloir supprimer le patient "${patientName}" ?<br><br>Cette action est irréversible.`,
+                    'Supprimer',
+                    'Annuler',
+                    function() {
+                        form.submit();
+                    }
+                );
+            }
+        }
+
+        // Variables globales pour les filtres
+        let currentGenderFilter = 'all';
+        let currentAgeFilter = 'all';
+        let currentSort = 'asc';
+
+        // Gestion des dropdowns
+        function toggleDropdown(dropdownId, buttonId, iconId) {
+            const dropdown = document.getElementById(dropdownId);
+            const icon = document.getElementById(iconId);
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            // Fermer tous les dropdowns
+            document.querySelectorAll('[id$="DropdownMenu"]').forEach(menu => {
+                if (menu.id !== dropdownId) {
+                    menu.classList.add('hidden');
+                }
+            });
+            
+            // Réinitialiser tous les icônes
+            document.querySelectorAll('[id$="DropdownIcon"]').forEach(ic => {
+                if (ic.id !== iconId) {
+                    ic.style.transform = 'rotate(0deg)';
+                }
+            });
+            
+            // Toggle le dropdown actuel
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Fonction de filtrage par genre
+        function filterByGender(gender) {
+            currentGenderFilter = gender;
+            
+            // Mettre à jour le texte du dropdown
+            const genderText = document.getElementById('genderDropdownText');
+            if (gender === 'all') {
+                genderText.textContent = 'Tous les genres';
+            } else if (gender === 'Male') {
+                genderText.textContent = 'Hommes';
+            } else {
+                genderText.textContent = 'Femmes';
+            }
+            
+            // Fermer le dropdown
+            document.getElementById('genderDropdownMenu').classList.add('hidden');
+            document.getElementById('genderDropdownIcon').style.transform = 'rotate(0deg)';
+            
+            applyFilters();
+        }
+
+        // Fonction de filtrage par âge
+        function filterByAge(ageRange) {
+            currentAgeFilter = ageRange;
+            
+            // Mettre à jour le texte du dropdown
+            const ageText = document.getElementById('ageDropdownText');
+            if (ageRange === 'all') {
+                ageText.textContent = 'Tous les âges';
+            } else if (ageRange === '0-18') {
+                ageText.textContent = '0-18 ans';
+            } else if (ageRange === '19-60') {
+                ageText.textContent = '19-60 ans';
+            } else {
+                ageText.textContent = '60+ ans';
+            }
+            
+            // Fermer le dropdown
+            document.getElementById('ageDropdownMenu').classList.add('hidden');
+            document.getElementById('ageDropdownIcon').style.transform = 'rotate(0deg)';
+            
+            applyFilters();
+        }
+
+        // Fonction de tri
+        function sortPatients(direction) {
+            currentSort = direction;
+            
+            // Mettre à jour le texte du dropdown
+            const sortText = document.getElementById('sortDropdownText');
+            sortText.textContent = direction === 'asc' ? 'A-Z' : 'Z-A';
+            
+            // Fermer le dropdown
+            document.getElementById('sortDropdownMenu').classList.add('hidden');
+            document.getElementById('sortDropdownIcon').style.transform = 'rotate(0deg)';
+            
+            const tbody = document.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                const nameA = a.querySelector('a').textContent.toLowerCase();
+                const nameB = b.querySelector('a').textContent.toLowerCase();
+                return direction === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+            applyFilters();
+        }
+
+        // Fonction d'application des filtres
+        function applyFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const tableRows = document.querySelectorAll('tbody tr');
+            const noResultsMessage = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            // Désélectionner la ligne si elle est filtrée
+            let selectedRowVisible = false;
+
+            tableRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const gender = row.getAttribute('data-gender');
+                const age = parseInt(row.getAttribute('data-age'));
+                
+                // Vérifier le filtre de recherche
+                const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                
+                // Vérifier le filtre de genre
+                let matchesGender = true;
+                if (currentGenderFilter !== 'all') {
+                    matchesGender = gender && gender.toLowerCase() === currentGenderFilter.toLowerCase();
+                }
+                
+                // Vérifier le filtre d'âge
+                let matchesAge = true;
+                if (currentAgeFilter === '0-18') {
+                    matchesAge = age >= 0 && age <= 18;
+                } else if (currentAgeFilter === '19-60') {
+                    matchesAge = age >= 19 && age <= 60;
+                } else if (currentAgeFilter === '60+') {
+                    matchesAge = age > 60;
+                }
+                
+                // Afficher ou masquer la ligne
+                if (matchesSearch && matchesGender && matchesAge) {
+                    row.style.display = '';
+                    visibleCount++;
+                    if (row === selectedRow) {
+                        selectedRowVisible = true;
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Si la ligne sélectionnée n'est plus visible, la désélectionner
+            if (selectedRow && !selectedRowVisible) {
+                selectedRow.classList.remove('bg-indigo-50', 'border-l-4', 'border-indigo-600');
+                selectedRow = null;
+                updateBulkActions();
+            }
+
+            // Afficher/masquer le message "Aucun résultat"
+            if (noResultsMessage) {
+                if (visibleCount === 0) {
+                    noResultsMessage.style.display = '';
+                } else {
+                    noResultsMessage.style.display = 'none';
+                }
+            }
+        }
+
+        // Fonction de recherche
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+
+            // Event listeners pour les dropdowns
+            const genderDropdownButton = document.getElementById('genderDropdownButton');
+            const ageDropdownButton = document.getElementById('ageDropdownButton');
+            const sortDropdownButton = document.getElementById('sortDropdownButton');
+
+            if (genderDropdownButton) {
+                genderDropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown('genderDropdownMenu', 'genderDropdownButton', 'genderDropdownIcon');
+                });
+            }
+
+            if (ageDropdownButton) {
+                ageDropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown('ageDropdownMenu', 'ageDropdownButton', 'ageDropdownIcon');
+                });
+            }
+
+            if (sortDropdownButton) {
+                sortDropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown('sortDropdownMenu', 'sortDropdownButton', 'sortDropdownIcon');
+                });
+            }
+
+            // Fermer les dropdowns quand on clique ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('[id$="DropdownButton"]')) {
+                    document.querySelectorAll('[id$="DropdownMenu"]').forEach(menu => {
+                        menu.classList.add('hidden');
+                    });
+                    document.querySelectorAll('[id$="DropdownIcon"]').forEach(icon => {
+                        icon.style.transform = 'rotate(0deg)';
+                    });
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,123 @@
+@model MedManager.Domain.Models.Users.Patient
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div>
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Bienvenue, @Model?.FirstName</h2>
+        <p class="mt-1 text-sm text-gray-600">Voici un aperçu de votre dossier médical</p>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Mes informations</h2>
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
+                <dd class="mt-1 text-sm text-gray-900">@Model?.FirstName @Model?.LastName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Date de naissance</dt>
+                <dd class="mt-1 text-sm text-gray-900">@Model?.DateBirthday.ToString("dd/MM/yyyy")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Sexe</dt>
+                <dd class="mt-1 text-sm text-gray-900">@Model?.Gender</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Médecin traitant</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                    @if (Model?.Doctor != null)
+                    {
+                        <span>Dr @Model.Doctor.FirstName @Model.Doctor.LastName</span>
+                    }
+                    else
+                    {
+                        <span class="text-gray-400">Aucun médecin assigné</span>
+                    }
+                </dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <!-- Prescriptions -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Ordonnances</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">@(Model?.Prescriptions?.Count ?? 0)</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Allergies -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Allergies</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">@(Model?.PatientAllergies?.Count ?? 0)</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical History -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Historiques</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">@(Model?.PatientHistories?.Count ?? 0)</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Actions rapides</h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <a asp-action="Prescriptions" class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Voir mes ordonnances
+            </a>
+            <a asp-action="MedicalHistory" class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Mon historique médical
+            </a>
+        </div>
+    </div>
+</div>

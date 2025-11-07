@@ -1,0 +1,21 @@
+@model MedManager.Web.ViewComponents.ToastMessagesViewModel
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div data-toast-success="@Model.SuccessMessage"></div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div data-toast-error="@Model.ErrorMessage"></div>
+}
+
+@if (!string.IsNullOrEmpty(Model.WarningMessage))
+{
+    <div data-toast-warning="@Model.WarningMessage"></div>
+}
+
+@if (!string.IsNullOrEmpty(Model.InfoMessage))
+{
+    <div data-toast-info="@Model.InfoMessage"></div>
+}

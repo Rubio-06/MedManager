@@ -1,0 +1,125 @@
+@model MedManager.Web.Models.ViewModels.EditPatientViewModel
+
+@{
+    ViewData["Title"] = "Modifier Patient";
+    Layout = "_ManagementLayout";
+}
+
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="flex items-center text-sm text-gray-600 mb-6">
+        <a asp-action="Patients" class="hover:text-indigo-600 transition duration-150">Patients</a>
+        <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-gray-900">Modifier</span>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Modifier Patient</h1>
+        <p class="mt-2 text-sm text-gray-600">Mettez à jour les informations du patient</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form asp-action="EditPatient" method="post">
+            <input asp-for="Id" type="hidden" />
+            <input asp-for="UserId" type="hidden" />
+            
+            <div asp-validation-summary="All" class="text-red-600 mb-4"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Prénom -->
+                <div>
+                    <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <input asp-for="FirstName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                    <span asp-validation-for="FirstName" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- Nom -->
+                <div>
+                    <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <input asp-for="LastName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                    <span asp-validation-for="LastName" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-6">
+                <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                <input asp-for="Email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Date de naissance -->
+                <div>
+                    <label asp-for="DateBirthday" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <input asp-for="DateBirthday" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                    <span asp-validation-for="DateBirthday" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- Sexe -->
+                <div>
+                    <label asp-for="Gender" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <select asp-for="Gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600">
+                        <option value="0">Homme</option>
+                        <option value="1">Femme</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Numéro de sécurité sociale -->
+            <div class="mb-6">
+                <label asp-for="SocialSecurityNumber" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                <input asp-for="SocialSecurityNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" maxlength="15" />
+                <span asp-validation-for="SocialSecurityNumber" class="text-red-600 text-sm"></span>
+                <p class="text-sm text-gray-500 mt-1">15 caractères requis</p>
+            </div>
+
+            <!-- Email confirmé -->
+            <div class="mb-6">
+                <label class="flex items-center">
+                    <input asp-for="EmailConfirmed" type="checkbox" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-600" />
+                    <span class="ml-2 text-sm text-gray-700">Email confirmé</span>
+                </label>
+                <p class="text-sm text-gray-500 mt-1">Indique si l'email du patient a été vérifié</p>
+            </div>
+
+            <!-- Warning Box -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <svg class="w-5 h-5 text-yellow-600 mr-3 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-semibold text-yellow-900 mb-1">Attention</h4>
+                        <p class="text-sm text-yellow-800">Vous ne pouvez pas modifier le mot de passe ici. Le patient doit utiliser la fonction "Mot de passe oublié" pour le réinitialiser.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="flex justify-end space-x-3">
+                <a asp-action="Patients" 
+                   class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-150">
+                    Annuler
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-150">
+                    <span class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Enregistrer les modifications
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

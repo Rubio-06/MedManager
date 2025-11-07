@@ -1,0 +1,363 @@
+@model List<MedManager.Web.Models.ViewModels.PrescriptionListItemViewModel>
+
+@{
+    ViewData["Title"] = "Mes Ordonnances";
+    Layout = "_ManagementLayout";
+}
+
+<div>
+    @Html.AntiForgeryToken()
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Ordonnances créées</h1>
+        <p class="text-gray-600 mt-1">Gérez toutes les ordonnances de vos patients</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Total Ordonnances</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Médicaments prescrits</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Sum(p => p.MedicineCount)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barre de recherche et bouton -->
+    <div class="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div class="flex flex-1 gap-3 flex-wrap">
+            <!-- Barre de recherche -->
+            <div class="relative flex-1 min-w-[250px]">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" 
+                       id="searchInput" 
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 sm:text-sm transition duration-150"
+                       placeholder="Rechercher une ordonnance (patient, date)...">
+            </div>
+
+            <!-- Dropdown Tri -->
+            <div class="relative">
+                <button type="button" id="sortDropdownButton" 
+                        class="inline-flex items-center justify-between w-full sm:w-40 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition duration-150">
+                    <span id="sortDropdownText">Plus récentes</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform duration-150" id="sortDropdownIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="sortDropdownMenu" class="hidden absolute z-10 mt-2 w-full sm:w-40 bg-white border border-gray-200 rounded-lg shadow-lg">
+                    <ul class="py-1">
+                        <li>
+                            <button type="button" onclick="sortPrescriptions('desc')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Plus récentes
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="sortPrescriptions('asc')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition duration-150">
+                                Plus anciennes
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bouton Créer -->
+        <button disabled
+           class="w-full sm:w-auto px-6 py-2 bg-gray-400 text-white rounded-lg font-medium inline-flex items-center justify-center cursor-not-allowed shrink-0 opacity-60">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Nouvelle Ordonnance (prochainement)
+        </button>
+    </div>
+
+    <!-- Table des ordonnances -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-indigo-900">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Patient
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Médicaments
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Statut
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var prescription in Model)
+                {
+                    <tr class="hover:bg-gray-50 transition-colors" data-date="@prescription.DateCreated.Ticks">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="shrink-0 h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">@prescription.DateCreated.ToString("dd/MM/yyyy")</div>
+                                    <div class="text-xs text-gray-500">@prescription.DateCreated.ToString("HH:mm")</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a asp-action="PatientProfile" asp-route-id="@prescription.PatientId" 
+                               class="text-sm font-medium text-indigo-600 hover:text-indigo-900 transition duration-150">
+                                @prescription.PatientName
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                @prescription.MedicineCount médicament@(prescription.MedicineCount > 1 ? "s" : "")
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                @prescription.Status
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-3">
+                                <button disabled 
+                                       class="text-gray-400 cursor-not-allowed"
+                                       title="Voir (prochainement)">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </button>
+                                <button disabled 
+                                       class="text-gray-400 cursor-not-allowed"
+                                       title="Imprimer (prochainement)">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="deletePrescription(@prescription.Id, '@prescription.DateCreated.ToString("dd/MM/yyyy")', '@prescription.PatientName')" 
+                                       class="text-red-600 hover:text-red-900 transition duration-150"
+                                       title="Supprimer l'ordonnance">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <p class="mt-2 text-sm">Aucune ordonnance créée</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Message "Aucun résultat" pour la recherche -->
+        <div id="noResults" style="display: none;" class="p-12 text-center">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun résultat</h3>
+            <p class="text-gray-600">Aucune ordonnance ne correspond à votre recherche.</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Variables globales pour les filtres
+        let currentSort = 'desc';
+
+        // Fonction de suppression d'ordonnance
+        function deletePrescription(prescriptionId, date, patientName) {
+            showConfirmDialog(
+                'Supprimer cette ordonnance ?',
+                `Êtes-vous sûr de vouloir supprimer l'ordonnance du ${date} pour ${patientName} ? Cette action est irréversible.`,
+                'Supprimer',
+                'Annuler',
+                function() {
+                    // Créer le FormData
+                    const formData = new FormData();
+                    formData.append('prescriptionId', prescriptionId);
+
+                    // Ajouter le token CSRF
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    
+                    fetch('@Url.Action("DeletePrescription", "Doctor")', {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            // Recharger la page après un court délai
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showToast(data.message || 'Erreur lors de la suppression', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Une erreur est survenue', 'error');
+                    });
+                }
+            );
+        }
+
+        // Gestion du dropdown
+        function toggleDropdown(dropdownId, buttonId, iconId) {
+            const dropdown = document.getElementById(dropdownId);
+            const icon = document.getElementById(iconId);
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Fonction de tri
+        function sortPrescriptions(direction) {
+            currentSort = direction;
+            
+            // Mettre à jour le texte du dropdown
+            const sortText = document.getElementById('sortDropdownText');
+            sortText.textContent = direction === 'desc' ? 'Plus récentes' : 'Plus anciennes';
+            
+            // Fermer le dropdown
+            document.getElementById('sortDropdownMenu').classList.add('hidden');
+            document.getElementById('sortDropdownIcon').style.transform = 'rotate(0deg)';
+            
+            applySorting();
+        }
+
+        // Fonction d'application du tri
+        function applySorting() {
+            const tbody = document.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr[data-date]'));
+            
+            rows.sort((a, b) => {
+                const dateA = parseInt(a.getAttribute('data-date'));
+                const dateB = parseInt(b.getAttribute('data-date'));
+                return currentSort === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+            applyFilters();
+        }
+
+        // Fonction d'application des filtres de recherche
+        function applyFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const tableRows = document.querySelectorAll('tbody tr[data-date]');
+            const noResultsMessage = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            tableRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                
+                if (matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Afficher/masquer le message "Aucun résultat"
+            if (noResultsMessage) {
+                if (visibleCount === 0 && searchTerm !== '') {
+                    noResultsMessage.style.display = '';
+                } else {
+                    noResultsMessage.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+
+            // Event listener pour le dropdown
+            const sortDropdownButton = document.getElementById('sortDropdownButton');
+            if (sortDropdownButton) {
+                sortDropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown('sortDropdownMenu', 'sortDropdownButton', 'sortDropdownIcon');
+                });
+            }
+
+            // Fermer le dropdown quand on clique ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#sortDropdownButton')) {
+                    const menu = document.getElementById('sortDropdownMenu');
+                    const icon = document.getElementById('sortDropdownIcon');
+                    if (menu) menu.classList.add('hidden');
+                    if (icon) icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+    </script>
+}

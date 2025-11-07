@@ -1,0 +1,83 @@
+@model MedManager.Web.Models.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Connexion";
+    Layout = "~/views/Shared/_LayoutAuth.cshtml";
+}
+
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                MedManager
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Connectez-vous à votre compte
+            </p>
+        </div>
+        
+        <form asp-action="Login" asp-controller="Account" method="post" class="mt-8 space-y-6">
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+            
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label asp-for="Email" class="sr-only">Email</label>
+                    <input asp-for="Email" 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                           placeholder="Email" />
+                    <span asp-validation-for="Email" class="text-red-600 text-xs"></span>
+                </div>
+                <div>
+                    <label asp-for="Password" class="sr-only">Mot de passe</label>
+                    <input asp-for="Password" 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                           placeholder="Mot de passe" />
+                    <span asp-validation-for="Password" class="text-red-600 text-xs"></span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input asp-for="RememberMe" 
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                    <label asp-for="RememberMe" class="ml-2 block text-sm text-gray-900">
+                        Se souvenir de moi
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    Se connecter
+                </button>
+            </div>
+        </form>
+
+        <!-- Comptes de test -->
+        <div class="mt-6 border-t border-gray-200 pt-6">
+            <p class="text-center text-sm text-gray-600 mb-3">Comptes de test disponibles :</p>
+            <div class="space-y-2 text-xs text-gray-500">
+                <div class="bg-blue-50 p-2 rounded">
+                    <strong>Admin:</strong> admin@("@")medmanager.com / Admin123!
+                </div>
+                <div class="bg-green-50 p-2 rounded">
+                    <strong>Doctor:</strong> doctor@("@")medmanager.com / Doctor123!
+                </div>
+                <div class="bg-purple-50 p-2 rounded">
+                    <strong>Patient:</strong> patient@("@")medmanager.com / Patient123!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

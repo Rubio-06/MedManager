@@ -1,0 +1,164 @@
+@model MedManager.Web.Models.ViewModels.EditUserViewModel
+
+@{
+    ViewData["Title"] = "Modifier l'Utilisateur";
+    Layout = "_ManagementLayout";
+    var doctors = ViewBag.Doctors as List<MedManager.Domain.Models.Users.Doctor> ?? new List<MedManager.Domain.Models.Users.Doctor>();
+}
+
+<!-- Breadcrumb Navigation -->
+<div class="flex items-center text-sm text-gray-600 mb-6">
+    <a asp-action="Users" class="hover:text-indigo-600 transition duration-150">Utilisateurs</a>
+    <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+    <span class="text-gray-900">Modifier</span>
+</div>
+
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Modifier l'Utilisateur</h1>
+        <p class="text-gray-600 mt-1">Modifiez les informations de l'utilisateur</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form asp-action="EditUser" method="post" id="editUserForm">
+            <input type="hidden" asp-for="PersonId" />
+            <input type="hidden" asp-for="UserId" />
+            
+            <div asp-validation-summary="All" class="text-red-600 mb-4"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Prénom -->
+                <div>
+                    <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <input asp-for="FirstName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                    <span asp-validation-for="FirstName" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- Nom -->
+                <div>
+                    <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <input asp-for="LastName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                    <span asp-validation-for="LastName" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <input asp-for="Email" type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                    <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- Rôle -->
+                <div>
+                    <label asp-for="Role" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                    <select asp-for="Role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600" id="roleSelect">
+                        <option value="Admin">Administrateur</option>
+                        <option value="Doctor">Médecin</option>
+                        <option value="Patient">Patient</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Changement de mot de passe (optionnel) -->
+            <div class="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Changer le Mot de Passe (Optionnel)</h3>
+                <p class="text-sm text-gray-600 mb-4">Laissez vide si vous ne souhaitez pas modifier le mot de passe</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Nouveau mot de passe -->
+                    <div>
+                        <label asp-for="NewPassword" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                        <input asp-for="NewPassword" type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                        <span asp-validation-for="NewPassword" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <!-- Confirmer nouveau mot de passe -->
+                    <div>
+                        <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                        <input asp-for="ConfirmPassword" type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                        <span asp-validation-for="ConfirmPassword" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Champs spécifiques Patient -->
+            <div id="patientFields" class="@(Model.Role == "Patient" ? "" : "hidden") mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations Patient</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Genre -->
+                    <div>
+                        <label asp-for="Gender" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                        <select asp-for="Gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="0">Homme</option>
+                            <option value="1">Femme</option>
+                            <option value="2">Autre</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <!-- Date de naissance -->
+                    <div>
+                        <label asp-for="DateBirthday" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                        <input asp-for="DateBirthday" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" />
+                        <span asp-validation-for="DateBirthday" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <!-- Numéro de sécurité sociale -->
+                    <div>
+                        <label asp-for="SocialSecurityNumber" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                        <input asp-for="SocialSecurityNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-gray-400 transition duration-150" placeholder="15 chiffres" maxlength="15" />
+                        <span asp-validation-for="SocialSecurityNumber" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <!-- Médecin assigné -->
+                    <div>
+                        <label asp-for="DoctorId" class="block text-sm font-medium text-gray-700 mb-2">Médecin Assigné</label>
+                        <select asp-for="DoctorId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600">
+                            <option value="">-- Aucun médecin --</option>
+                            @foreach (var doctor in doctors)
+                            {
+                                <option value="@doctor.Id">Dr @doctor.FirstName @doctor.LastName</option>
+                            }
+                        </select>
+                        <span asp-validation-for="DoctorId" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="mt-6 flex justify-end space-x-3">
+                <a asp-action="Users" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150 font-medium">
+                    Annuler
+                </a>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Afficher/masquer les champs spécifiques au patient
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            const patientFields = document.getElementById('patientFields');
+            if (this.value === 'Patient') {
+                patientFields.classList.remove('hidden');
+            } else {
+                patientFields.classList.add('hidden');
+            }
+        });
+    </script>
+}

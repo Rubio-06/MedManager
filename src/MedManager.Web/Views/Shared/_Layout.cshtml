@@ -1,25 +1,43 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MedManager.Web</title>
-    <link rel="stylesheet" href="~/css/style.css" />
+    <title>@ViewData["Title"] - MedManager</title>
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <h1>MedManager</h1>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
+<body class="h-full">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- Layout with Sidebar -->
+        @await Component.InvokeAsync("Navigation")
+        
+        <!-- Main Content Area (with offset for sidebar and header) -->
+        <main class="ml-64 pt-16">
+            <div class="p-6">
+                @RenderBody()
+            </div>
         </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - MedManager.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    }
+    else
+    {
+        <!-- Layout without Sidebar -->
+        <div class="min-h-full">
+            @await Component.InvokeAsync("Navigation")
+            <main>
+                @RenderBody()
+            </main>
         </div>
-    </footer>
+    }
+
+    @* Toast Messages Component *@
+    @await Component.InvokeAsync("ToastMessages")
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/navigation.js" asp-append-version="true"></script>
+    <script src="~/js/confirm-dialog.js" asp-append-version="true"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
