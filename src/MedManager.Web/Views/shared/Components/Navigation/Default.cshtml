@@ -94,7 +94,9 @@
                 <button id="userMenuButton" type="button" 
                         class="w-full flex items-center p-2 rounded-lg hover:bg-indigo-800 transition duration-150 cursor-pointer">
                     <div class="shrink-0 h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center">
-                        <span class="text-white font-medium text-sm">@Model.FirstName[0]@Model.LastName[0]</span>
+                        <span class="text-white font-medium text-sm">
+                            @(string.IsNullOrEmpty(Model.FirstName) ? "U" : Model.FirstName[0])@(string.IsNullOrEmpty(Model.LastName) ? "U" : Model.LastName[0])
+                        </span>
                     </div>
                     <div class="ml-3 flex-1 text-left">
                         <div class="text-sm font-medium">@Model.FullName</div>

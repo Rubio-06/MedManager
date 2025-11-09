@@ -16,21 +16,113 @@ namespace MedManager.Infrastructure.Database
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // Ensure database is created and migrations are applied
-            await context.Database.MigrateAsync();
-
-            // Seed data based on environment
-            switch (environment.ToLower())
+            try
             {
-                case "development":
-                    await SeedDevelopmentData(context, userManager, roleManager);
-                    break;
-                case "test":
-                    await SeedTestData(context, userManager, roleManager);
-                    break;
-                case "production":
-                    await SeedProductionData(context, userManager, roleManager);
-                    break;
+                // CRÉER LA TABLE MEDICINECOMPONENTS EN PREMIER (avant MigrateAsync)
+                await EnsureMedicineComponentsTableExists(context);
+
+                // CRÉER LA TABLE MEDICALHISTORIES
+                await EnsureMedicalHistoriesTableExists(context);
+
+                // Ensure database is created and migrations are applied
+                await context.Database.MigrateAsync();
+
+                // Seed data based on environment
+                switch (environment.ToLower())
+                {
+                    case "development":
+                        await SeedDevelopmentData(context, userManager, roleManager);
+                        break;
+                    case "test":
+                        await SeedTestData(context, userManager, roleManager);
+                        break;
+                    case "production":
+                        await SeedProductionData(context, userManager, roleManager);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERREUR INITIALISATION DATABASE: {ex.Message}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
+                throw;
+            }
+        }
+
+        private static async Task EnsureMedicineComponentsTableExists(DatabaseContext context)
+        {
+            try
+            {
+                Console.WriteLine("🔍 Vérification de la table MedicineComponents...");
+                
+                // Créer la table directement, MySQL ignore si elle existe déjà
+                await context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS `MedicineComponents` (
+                        `Id` int NOT NULL AUTO_INCREMENT,
+                        `Name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+                        `Dosage` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+                        `MedicineId` int NOT NULL,
+                        CONSTRAINT `PK_MedicineComponents` PRIMARY KEY (`Id`),
+                        CONSTRAINT `FK_MedicineComponents_Medicines_MedicineId` 
+                            FOREIGN KEY (`MedicineId`) 
+                            REFERENCES `Medicines` (`Id`) 
+                            ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                ");
+
+                // Créer l'index
+                await context.Database.ExecuteSqlRawAsync(@"
+                    CREATE INDEX IF NOT EXISTS `IX_MedicineComponents_MedicineId` 
+                    ON `MedicineComponents` (`MedicineId`);
+                ");
+
+                Console.WriteLine("✓ Table MedicineComponents OK");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Erreur lors de la création de MedicineComponents: {ex.Message}");
+                // On continue quand même, peut-être que la table existe déjà
+            }
+        }
+
+        private static async Task EnsureMedicalHistoriesTableExists(DatabaseContext context)
+        {
+            try
+            {
+                Console.WriteLine("🔍 Vérification de la table MedicalHistories...");
+                
+                // Créer la table directement, MySQL ignore si elle existe déjà
+                await context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS `MedicalHistories` (
+                        `Id` int NOT NULL AUTO_INCREMENT,
+                        `PatientId` int NOT NULL,
+                        `Type` int NOT NULL,
+                        `Title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+                        `Description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+                        `Date` datetime(6) NOT NULL,
+                        `Severity` int NOT NULL,
+                        `CreatedAt` datetime(6) NOT NULL,
+                        `UpdatedAt` datetime(6) NOT NULL,
+                        CONSTRAINT `PK_MedicalHistories` PRIMARY KEY (`Id`),
+                        CONSTRAINT `FK_MedicalHistories_Persons_PatientId` 
+                            FOREIGN KEY (`PatientId`) 
+                            REFERENCES `Persons` (`Id`) 
+                            ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                ");
+
+                // Créer l'index
+                await context.Database.ExecuteSqlRawAsync(@"
+                    CREATE INDEX IF NOT EXISTS `IX_MedicalHistories_PatientId` 
+                    ON `MedicalHistories` (`PatientId`);
+                ");
+
+                Console.WriteLine("✓ Table MedicalHistories OK");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Erreur lors de la création de MedicalHistories: {ex.Message}");
+                // On continue quand même, peut-être que la table existe déjà
             }
         }
 

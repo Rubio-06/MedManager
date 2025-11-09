@@ -19,9 +19,11 @@ namespace MedManager.Infrastructure.Context
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Medicine> Medicines { get; set; }
+        public DbSet<MedicineComponent> MedicineComponents { get; set; }
         public DbSet<Allergy> Allergies { get; set; }
         public DbSet<History> Histories { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
+        public DbSet<MedicalHistory> MedicalHistories { get; set; }
 
         // DbSets for junction tables (many-to-many relationships)
         public DbSet<MedicineAllergy> MedicineAllergies { get; set; }
@@ -68,6 +70,13 @@ namespace MedManager.Infrastructure.Context
                 .WithMany(p => p.Prescriptions)
                 .HasForeignKey(p => p.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Medicine -> MedicineComponent relationship
+            builder.Entity<MedicineComponent>()
+                .HasOne(mc => mc.Medicine)
+                .WithMany(m => m.Components)
+                .HasForeignKey(mc => mc.MedicineId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure many-to-many relationships using junction tables
 
@@ -134,6 +143,13 @@ namespace MedManager.Infrastructure.Context
                 .HasOne(pm => pm.Medicine)
                 .WithMany(m => m.PrescriptionMedicines)
                 .HasForeignKey(pm => pm.MedicineId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // MedicalHistory
+            builder.Entity<MedicalHistory>()
+                .HasOne(mh => mh.Patient)
+                .WithMany(p => p.MedicalHistories)
+                .HasForeignKey(mh => mh.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Index configurations for better performance

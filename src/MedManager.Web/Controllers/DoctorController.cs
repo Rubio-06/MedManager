@@ -252,6 +252,7 @@ namespace MedManager.Web.Controllers
                 .Include(p => p.Prescriptions)
                     .ThenInclude(pr => pr.PrescriptionMedicines)
                         .ThenInclude(pm => pm.Medicine)
+                .Include(p => p.MedicalHistories)
                 .FirstOrDefaultAsync(p => p.Id == id && p.DoctorId == doctorId.Value);
 
             if (patient == null)
@@ -306,6 +307,20 @@ namespace MedManager.Web.Controllers
                         Duration = pm.Duration,
                         Instructions = pm.Instructions
                     }).ToList()
+                }).ToList(),
+
+                // Medical Histories
+                MedicalHistories = patient.MedicalHistories.OrderByDescending(mh => mh.Date).Select(mh => new MedicalHistoryViewModel
+                {
+                    Id = mh.Id,
+                    Type = mh.Type,
+                    TypeDisplay = GetMedicalHistoryTypeDisplay(mh.Type),
+                    Title = mh.Title,
+                    Description = mh.Description,
+                    Date = mh.Date,
+                    Severity = mh.Severity,
+                    SeverityDisplay = GetSeverityDisplay(mh.Severity),
+                    CreatedAt = mh.CreatedAt
                 }).ToList()
             };
 
@@ -546,10 +561,12 @@ namespace MedManager.Web.Controllers
                 DoctorSpecialty = "Médecin généraliste" // Hardcodé car le modèle n'a pas de propriété Specialty
             };
 
+            Patient? patient = null;
+
             // Si patientId est fourni, charger les infos du patient
             if (patientId.HasValue)
             {
-                var patient = await _context.Patients
+                patient = await _context.Patients
                     .Include(p => p.User)
                     .Include(p => p.PatientAllergies)
                         .ThenInclude(pa => pa.Allergy)
@@ -577,21 +594,47 @@ namespace MedManager.Web.Controllers
             }
 
             // Charger tous les médicaments disponibles
-            var medicines = await _context.Medicines.OrderBy(m => m.Name).ToListAsync();
-            viewModel.AvailableMedicines = medicines.Select(m => new MedicineItemViewModel
+            var medicines = await _context.Medicines
+                .Include(m => m.Components)
+                .Include(m => m.MedicineAllergies)
+                .OrderBy(m => m.Name)
+                .ToListAsync();
+            
+            viewModel.AvailableMedicines = medicines.Select(m =>
             {
-                Id = m.Id,
-                Name = m.Name,
-                Composition = m.Description ?? "", // Utiliser Description comme Composition
-                Description = m.Description ?? "",
-                Price = 0 // Le prix n'est pas dans le modèle actuel
+                bool hasAllergyConflict = false;
+                
+                if (patient != null)
+                {
+                    // Vérifier les allergies directes (table MedicineAllergies)
+                    hasAllergyConflict = m.MedicineAllergies.Any(ma => 
+                        patient.PatientAllergies.Any(pa => pa.AllergyId == ma.AllergyId));
+                    
+                    // Si pas de conflit direct, vérifier les composants
+                    if (!hasAllergyConflict)
+                    {
+                        hasAllergyConflict = m.Components.Any(comp => 
+                            patient.PatientAllergies.Any(pa => 
+                                pa.Allergy.Name.Equals(comp.Name, StringComparison.OrdinalIgnoreCase) ||
+                                comp.Name.Contains(pa.Allergy.Name, StringComparison.OrdinalIgnoreCase)));
+                    }
+                }
+
+                return new MedicineItemViewModel
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Composition = string.Join(", ", m.Components.Select(c => $"{c.Name} {c.Dosage}")),
+                    Description = m.Description ?? "",
+                    Price = 0, // Le prix n'est pas dans le modèle actuel
+                    HasAllergyConflict = hasAllergyConflict
+                };
             }).ToList();
 
             return View("CreatePrescriptionNew", viewModel);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePrescription(int patientId, string medicines)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
@@ -604,7 +647,11 @@ namespace MedManager.Web.Controllers
             List<PrescriptionMedicineDto>? medicinesList = null;
             try
             {
-                medicinesList = System.Text.Json.JsonSerializer.Deserialize<List<PrescriptionMedicineDto>>(medicines);
+                var options = new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                medicinesList = System.Text.Json.JsonSerializer.Deserialize<List<PrescriptionMedicineDto>>(medicines, options);
             }
             catch
             {
@@ -634,11 +681,13 @@ namespace MedManager.Web.Controllers
             var medicineIds = medicinesList.Select(m => m.MedicineId).ToList();
             var prescribedMedicines = await _context.Medicines
                 .Include(m => m.MedicineAllergies)
+                .Include(m => m.Components) // Charger les composants
                 .Where(m => medicineIds.Contains(m.Id))
                 .ToListAsync();
 
             foreach (var medicine in prescribedMedicines)
             {
+                // Vérifier les allergies directes (médicament dans la table MedicineAllergies)
                 var allergyConflict = medicine.MedicineAllergies
                     .Any(ma => patient.PatientAllergies.Any(pa => pa.AllergyId == ma.AllergyId));
 
@@ -649,8 +698,27 @@ namespace MedManager.Web.Controllers
                         .Select(ma => patient.PatientAllergies.First(pa => pa.AllergyId == ma.AllergyId).Allergy.Name)
                         .FirstOrDefault();
 
-                    TempData["ErrorMessage"] = $"ATTENTION : Le patient est allergique à {allergyName}. Le médicament '{medicine.Name}' ne peut pas être prescrit.";
+                    TempData["ErrorMessage"] = $"⚠️ ATTENTION : Le patient est allergique à {allergyName}. Le médicament '{medicine.Name}' ne peut pas être prescrit.";
                     return RedirectToAction(nameof(CreatePrescription), new { patientId });
+                }
+
+                // Vérifier si un composant du médicament correspond à une allergie du patient
+                foreach (var component in medicine.Components)
+                {
+                    var componentMatchesAllergy = patient.PatientAllergies.Any(pa => 
+                        pa.Allergy.Name.Equals(component.Name, StringComparison.OrdinalIgnoreCase) ||
+                        component.Name.Contains(pa.Allergy.Name, StringComparison.OrdinalIgnoreCase));
+
+                    if (componentMatchesAllergy)
+                    {
+                        var matchedAllergy = patient.PatientAllergies
+                            .First(pa => pa.Allergy.Name.Equals(component.Name, StringComparison.OrdinalIgnoreCase) ||
+                                        component.Name.Contains(pa.Allergy.Name, StringComparison.OrdinalIgnoreCase))
+                            .Allergy.Name;
+
+                        TempData["ErrorMessage"] = $"⚠️ ATTENTION : Le patient est allergique à {matchedAllergy}. Le médicament '{medicine.Name}' contient '{component.Name}' et ne peut pas être prescrit.";
+                        return RedirectToAction(nameof(CreatePrescription), new { patientId });
+                    }
                 }
             }
 
@@ -684,7 +752,65 @@ namespace MedManager.Web.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Ordonnance créée avec succès pour {patient.FirstName} {patient.LastName}.";
-            return RedirectToAction(nameof(Prescriptions));
+            return RedirectToAction(nameof(PrescriptionDetails), new { id = prescription.Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PrescriptionDetails(int id)
+        {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (doctorId == null)
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            var prescription = await _context.Prescriptions
+                .Include(p => p.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(p => p.Patient.PatientAllergies)
+                    .ThenInclude(pa => pa.Allergy)
+                .Include(p => p.Doctor)
+                .Include(p => p.PrescriptionMedicines)
+                    .ThenInclude(pm => pm.Medicine)
+                        .ThenInclude(m => m.Components)
+                .FirstOrDefaultAsync(p => p.Id == id && p.DoctorId == doctorId.Value);
+
+            if (prescription == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new PrescriptionDetailsViewModel
+            {
+                Id = prescription.Id,
+                DateCreated = prescription.DateCreated,
+                PatientId = prescription.PatientId,
+                PatientFirstName = prescription.Patient.FirstName,
+                PatientLastName = prescription.Patient.LastName,
+                PatientEmail = prescription.Patient.User.Email ?? "",
+                PatientAge = CalculateAge(prescription.Patient.DateBirthday),
+                PatientGender = prescription.Patient.Gender == MedManager.Domain.Models.Users.Gender.Male ? "Homme" : "Femme",
+                SocialSecurityNumber = prescription.Patient.SocialSecurityNumber,
+                DoctorFirstName = prescription.Doctor.FirstName,
+                DoctorLastName = prescription.Doctor.LastName,
+                PatientAllergies = prescription.Patient.PatientAllergies.Select(pa => new PatientAllergyViewModel
+                {
+                    Id = pa.AllergyId,
+                    Name = pa.Allergy.Name
+                }).ToList(),
+                Medicines = prescription.PrescriptionMedicines.Select(pm => new PrescriptionMedicineViewModel
+                {
+                    MedicineId = pm.MedicineId,
+                    MedicineName = pm.Medicine.Name,
+                    Composition = string.Join(", ", pm.Medicine.Components.Select(c => $"{c.Name} {c.Dosage}")),
+                    Quantity = pm.Quantity,
+                    Dosage = pm.Dosage,
+                    Duration = pm.Duration,
+                    Instructions = pm.Instructions
+                }).ToList()
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
@@ -717,6 +843,188 @@ namespace MedManager.Web.Controllers
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = $"Ordonnance du {prescription.DateCreated:dd/MM/yyyy} supprimée avec succès" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDoctorPatients()
+        {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (doctorId == null)
+            {
+                return Json(new List<object>());
+            }
+
+            var patients = await _context.Patients
+                .Include(p => p.User)
+                .Include(p => p.PatientAllergies)
+                    .ThenInclude(pa => pa.Allergy)
+                .Where(p => p.DoctorId == doctorId.Value)
+                .OrderBy(p => p.LastName)
+                .ThenBy(p => p.FirstName)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    firstName = p.FirstName,
+                    lastName = p.LastName,
+                    email = p.User.Email,
+                    allergies = p.PatientAllergies.Select(pa => new { 
+                        id = pa.AllergyId, 
+                        name = pa.Allergy.Name 
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Json(patients);
+        }
+
+        #endregion
+
+        #region Medical History Management
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddMedicalHistory([FromForm] int patientId, [FromForm] string type, 
+            [FromForm] string title, [FromForm] string description, [FromForm] DateTime date, [FromForm] string severity)
+        {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (doctorId == null)
+            {
+                return Json(new { success = false, message = "Accès non autorisé" });
+            }
+
+            // Vérifier que le patient appartient au docteur
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id == patientId && p.DoctorId == doctorId.Value);
+            if (patient == null)
+            {
+                return Json(new { success = false, message = "Patient non trouvé" });
+            }
+
+            // Parser les enums
+            if (!Enum.TryParse<MedicalHistoryType>(type, out var historyType))
+            {
+                return Json(new { success = false, message = "Type d'antécédent invalide" });
+            }
+
+            if (!Enum.TryParse<Severity>(severity, out var severityLevel))
+            {
+                return Json(new { success = false, message = "Niveau de sévérité invalide" });
+            }
+
+            var medicalHistory = new MedicalHistory
+            {
+                PatientId = patientId,
+                Type = historyType,
+                Title = title,
+                Description = description,
+                Date = date,
+                Severity = severityLevel,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.MedicalHistories.Add(medicalHistory);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Antécédent ajouté avec succès" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateMedicalHistory([FromForm] int id, [FromForm] int patientId, 
+            [FromForm] string type, [FromForm] string title, [FromForm] string description, 
+            [FromForm] DateTime date, [FromForm] string severity)
+        {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (doctorId == null)
+            {
+                return Json(new { success = false, message = "Accès non autorisé" });
+            }
+
+            var medicalHistory = await _context.MedicalHistories
+                .Include(mh => mh.Patient)
+                .FirstOrDefaultAsync(mh => mh.Id == id && mh.Patient.DoctorId == doctorId.Value);
+
+            if (medicalHistory == null)
+            {
+                return Json(new { success = false, message = "Antécédent non trouvé" });
+            }
+
+            // Parser les enums
+            if (!Enum.TryParse<MedicalHistoryType>(type, out var historyType))
+            {
+                return Json(new { success = false, message = "Type d'antécédent invalide" });
+            }
+
+            if (!Enum.TryParse<Severity>(severity, out var severityLevel))
+            {
+                return Json(new { success = false, message = "Niveau de sévérité invalide" });
+            }
+
+            medicalHistory.Type = historyType;
+            medicalHistory.Title = title;
+            medicalHistory.Description = description;
+            medicalHistory.Date = date;
+            medicalHistory.Severity = severityLevel;
+            medicalHistory.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Antécédent modifié avec succès" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteMedicalHistory([FromForm] int id)
+        {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (doctorId == null)
+            {
+                return Json(new { success = false, message = "Accès non autorisé" });
+            }
+
+            var medicalHistory = await _context.MedicalHistories
+                .Include(mh => mh.Patient)
+                .FirstOrDefaultAsync(mh => mh.Id == id && mh.Patient.DoctorId == doctorId.Value);
+
+            if (medicalHistory == null)
+            {
+                return Json(new { success = false, message = "Antécédent non trouvé" });
+            }
+
+            _context.MedicalHistories.Remove(medicalHistory);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Antécédent supprimé avec succès" });
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private static string GetMedicalHistoryTypeDisplay(MedicalHistoryType type)
+        {
+            return type switch
+            {
+                MedicalHistoryType.ChronicDisease => "Maladie chronique",
+                MedicalHistoryType.Surgery => "Opération chirurgicale",
+                MedicalHistoryType.Hospitalization => "Hospitalisation",
+                MedicalHistoryType.FamilyHistory => "Antécédent familial",
+                MedicalHistoryType.Vaccination => "Vaccination",
+                MedicalHistoryType.CurrentCondition => "Condition actuelle",
+                MedicalHistoryType.Other => "Autre",
+                _ => "Non spécifié"
+            };
+        }
+
+        private static string GetSeverityDisplay(Severity severity)
+        {
+            return severity switch
+            {
+                Severity.Low => "Faible",
+                Severity.Medium => "Modérée",
+                Severity.High => "Élevée",
+                Severity.Critical => "Critique",
+                _ => "Non spécifié"
+            };
         }
 
         #endregion

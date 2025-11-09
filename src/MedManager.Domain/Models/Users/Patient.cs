@@ -31,6 +31,7 @@ namespace MedManager.Domain.Models.Users
 
         // Associated Tables (1-n)
         public virtual ICollection<Prescription> Prescriptions { get; set; } = [];
+        public virtual ICollection<MedicalHistory> MedicalHistories { get; set; } = [];
 
         // Associated Tables (n-n)
         public virtual ICollection<PatientHistory> PatientHistories { get; set; } = [];

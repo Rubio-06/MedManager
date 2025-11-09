@@ -1,3 +1,4 @@
+using MedManager.Domain.Models;
 using MedManager.Domain.Models.Users;
 
 namespace MedManager.Web.Models.ViewModels
@@ -23,6 +24,9 @@ namespace MedManager.Web.Models.ViewModels
         public int PrescriptionCount { get; set; }
         public int ActivePrescriptionCount { get; set; }
         public List<PatientPrescriptionViewModel> Prescriptions { get; set; } = new();
+
+        // Medical Histories
+        public List<MedicalHistoryViewModel> MedicalHistories { get; set; } = new();
     }
 
     public class AllergyItemViewModel
@@ -47,5 +51,18 @@ namespace MedManager.Web.Models.ViewModels
         public string Dosage { get; set; } = string.Empty;
         public string Duration { get; set; } = string.Empty;
         public string Instructions { get; set; } = string.Empty;
+    }
+
+    public class MedicalHistoryViewModel
+    {
+        public int Id { get; set; }
+        public MedicalHistoryType Type { get; set; }
+        public string TypeDisplay { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public Severity Severity { get; set; }
+        public string SeverityDisplay { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 }

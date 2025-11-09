@@ -1,41 +1,33 @@
 namespace MedManager.Web.Models.ViewModels
 {
-    public class CreatePrescriptionViewModel
+    public class PrescriptionDetailsViewModel
     {
+        public int Id { get; set; }
+        public DateTime DateCreated { get; set; }
+
+        // Patient Info
         public int PatientId { get; set; }
         public string PatientFirstName { get; set; } = string.Empty;
         public string PatientLastName { get; set; } = string.Empty;
+        public string PatientFullName => $"{PatientFirstName} {PatientLastName}";
         public string PatientEmail { get; set; } = string.Empty;
         public int PatientAge { get; set; }
         public string PatientGender { get; set; } = string.Empty;
         public string SocialSecurityNumber { get; set; } = string.Empty;
 
+        // Doctor Info
         public string DoctorFirstName { get; set; } = string.Empty;
         public string DoctorLastName { get; set; } = string.Empty;
-        public string DoctorSpecialty { get; set; } = string.Empty;
+        public string DoctorFullName => $"Dr. {DoctorFirstName} {DoctorLastName}";
 
+        // Allergies
         public List<PatientAllergyViewModel> PatientAllergies { get; set; } = new();
-        public List<MedicineItemViewModel> AvailableMedicines { get; set; } = new();
+
+        // Medicines
+        public List<PrescriptionMedicineViewModel> Medicines { get; set; } = new();
     }
 
-    public class PatientAllergyViewModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-    }
-
-    public class MedicineItemViewModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Composition { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-        public bool HasAllergyConflict { get; set; }
-    }
-
-    public class PrescriptionMedicineDto
+    public class PrescriptionMedicineViewModel
     {
         public int MedicineId { get; set; }
         public string MedicineName { get; set; } = string.Empty;

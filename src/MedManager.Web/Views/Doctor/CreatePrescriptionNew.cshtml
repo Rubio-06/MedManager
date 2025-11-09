@@ -127,8 +127,8 @@
 </div>
 
 <!-- Modal Ajouter Médicament -->
-<div id="medicineModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+<div id="medicineModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display: none;" onclick="handleModalOverlayClick(event, 'medicineModal')">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 class="text-xl font-semibold text-gray-900">Ajouter un médicament</h3>
@@ -156,22 +156,48 @@
             <div id="medicineList" class="space-y-2">
                 @foreach (var medicine in Model.AvailableMedicines)
                 {
-                    <div class="medicine-item p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition duration-150"
+                    var hasConflict = medicine.HasAllergyConflict;
+                    var cardClass = hasConflict 
+                        ? "medicine-item p-3 border-2 border-red-300 bg-red-50 rounded-lg cursor-not-allowed opacity-60" 
+                        : "medicine-item p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition duration-150";
+                    
+                    <div class="@cardClass"
                          data-medicine-id="@medicine.Id"
                          data-medicine-name="@medicine.Name.ToLower()"
                          data-medicine-composition="@(medicine.Composition?.ToLower() ?? "")"
-                         onclick="selectMedicine(@medicine.Id, '@medicine.Name', '@(medicine.Composition ?? "")')">
+                         data-has-conflict="@hasConflict.ToString().ToLower()"
+                         onclick="selectMedicine(@medicine.Id, '@medicine.Name', '@(medicine.Composition ?? "")', @hasConflict.ToString().ToLower())">
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
-                                <p class="font-medium text-gray-900">@medicine.Name</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="font-medium text-gray-900">@medicine.Name</p>
+                                    @if (hasConflict)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Allergie
+                                        </span>
+                                    }
+                                </div>
                                 @if (!string.IsNullOrEmpty(medicine.Composition))
                                 {
                                     <p class="text-sm text-gray-600 mt-1">@medicine.Composition</p>
                                 }
                             </div>
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
+                            @if (!hasConflict)
+                            {
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            }
+                            else
+                            {
+                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                </svg>
+                            }
                         </div>
                     </div>
                 }
@@ -187,8 +213,8 @@
 </div>
 
 <!-- Modal Détails Médicament -->
-<div id="medicineDetailsModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+<div id="medicineDetailsModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display: none;" onclick="handleModalOverlayClick(event, 'medicineDetailsModal')">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 class="text-xl font-semibold text-gray-900" id="modalMedicineName"></h3>
@@ -254,14 +280,51 @@
         let prescribedMedicines = [];
         let editingMedicineIndex = null;
 
+        function handleModalOverlayClick(event, modalId) {
+            if (event.target.id === modalId) {
+                if (modalId === 'medicineModal') {
+                    closeMedicineModal();
+                } else if (modalId === 'medicineDetailsModal') {
+                    closeMedicineDetailsModal();
+                }
+            }
+        }
+
         function openMedicineModal() {
             document.getElementById('medicineModal').style.display = 'flex';
             document.getElementById('medicineSearch').value = '';
             filterMedicines();
+            updateMedicineListState();
         }
 
         function closeMedicineModal() {
             document.getElementById('medicineModal').style.display = 'none';
+        }
+
+        function updateMedicineListState() {
+            const medicineItems = document.querySelectorAll('.medicine-item');
+            const prescribedIds = prescribedMedicines.map(m => m.medicineId);
+
+            medicineItems.forEach(item => {
+                const medicineId = parseInt(item.getAttribute('data-medicine-id'));
+                const hasConflict = item.getAttribute('data-has-conflict') === 'true';
+                const isAlreadyPrescribed = prescribedIds.includes(medicineId);
+
+                if (isAlreadyPrescribed) {
+                    item.classList.remove('hover:border-green-400', 'hover:bg-green-50', 'cursor-pointer');
+                    item.classList.add('bg-gray-100', 'opacity-50', 'cursor-not-allowed', 'border-gray-300');
+                    item.onclick = function(e) {
+                        e.preventDefault();
+                        showWarningToast('Ce médicament est déjà dans l\'ordonnance');
+                    };
+                } else if (hasConflict) {
+                    // Already styled by server, just update onclick
+                    item.onclick = function(e) {
+                        e.preventDefault();
+                        showErrorToast('⚠️ ATTENTION : Le patient est allergique à un composant de ce médicament !', 5000);
+                    };
+                }
+            });
         }
 
         function filterMedicines() {
@@ -284,7 +347,19 @@
             document.getElementById('noMedicineResults').classList.toggle('hidden', visibleCount > 0);
         }
 
-        function selectMedicine(medicineId, medicineName, composition) {
+        function selectMedicine(medicineId, medicineName, composition, hasConflict) {
+            // Vérifier si déjà prescrit
+            if (prescribedMedicines.some(m => m.medicineId === medicineId)) {
+                showWarningToast('Ce médicament est déjà dans l\'ordonnance');
+                return;
+            }
+
+            // Vérifier le conflit d'allergie
+            if (hasConflict) {
+                showErrorToast('⚠️ ATTENTION : Le patient est allergique à un composant de ce médicament !', 5000);
+                return;
+            }
+
             closeMedicineModal();
             
             // Ouvrir le modal de détails
@@ -316,7 +391,7 @@
             const instructions = document.getElementById('medicineInstructions').value;
 
             if (!quantity || !dosage) {
-                alert('Veuillez remplir les champs obligatoires');
+                showErrorToast('Veuillez remplir les champs obligatoires (Quantité et Dosage)');
                 return;
             }
 
@@ -333,8 +408,10 @@
             if (editingMedicineIndex !== null) {
                 prescribedMedicines[editingMedicineIndex] = medicine;
                 editingMedicineIndex = null;
+                showSuccessToast('Médicament modifié avec succès');
             } else {
                 prescribedMedicines.push(medicine);
+                showSuccessToast('Médicament ajouté à l\'ordonnance');
             }
 
             updatePrescriptionList();
@@ -415,27 +492,24 @@
                 function() {
                     prescribedMedicines.splice(index, 1);
                     updatePrescriptionList();
+                    updateMedicineListState();
+                    showInfoToast('Médicament retiré de l\'ordonnance');
                 }
             );
         }
 
         function submitPrescription() {
             if (prescribedMedicines.length === 0) {
-                alert('Veuillez ajouter au moins un médicament');
+                showErrorToast('Veuillez ajouter au moins un médicament');
                 return;
             }
+
+            console.log('Médicaments à envoyer:', prescribedMedicines);
 
             // Créer un formulaire pour soumettre les données
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '@Url.Action("CreatePrescription", "Doctor")';
-
-            // Ajouter le token CSRF
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '__RequestVerificationToken';
-            csrfInput.value = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)[1];
-            form.appendChild(csrfInput);
 
             // Ajouter le patient ID
             const patientInput = document.createElement('input');
@@ -451,6 +525,9 @@
             medicinesInput.value = JSON.stringify(prescribedMedicines);
             form.appendChild(medicinesInput);
 
+            console.log('Valeur JSON envoyée:', medicinesInput.value);
+
+            // Ajouter le formulaire au body et le soumettre
             document.body.appendChild(form);
             form.submit();
         }

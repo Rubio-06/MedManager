@@ -1,8 +1,7 @@
-using MedManager.Domain.Models;
-using MedManager.Domain.Models.Users;
 using MedManager.Infrastructure.Context;
-
+using MedManager.Infrastructure.Database.SeedData.Seeds;
 using Microsoft.AspNetCore.Identity;
+using MedManager.Domain.Models.Users;
 
 namespace MedManager.Infrastructure.Database.SeedData
 {
@@ -13,195 +12,66 @@ namespace MedManager.Infrastructure.Database.SeedData
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager)
         {
-            await SeedUsersAsync(context, userManager);
-            await SeedMedicinesAsync(context);
-            await SeedAllergiesAsync(context);
-            await SeedHistoriesAsync(context);
-
-            await context.SaveChangesAsync();
-        }
-
-        private static async Task SeedUsersAsync(DatabaseContext context, UserManager<ApplicationUser> userManager)
-        {
-            // Admin
-            var adminUser = await userManager.FindByEmailAsync("admin@medmanager.com");
-            if (adminUser == null)
+            try
             {
-                adminUser = new ApplicationUser
-                {
-                    UserName = "admin@medmanager.com",
-                    Email = "admin@medmanager.com",
-                    EmailConfirmed = true
-                };
-                await userManager.CreateAsync(adminUser, "Admin123!");
-                await userManager.AddToRoleAsync(adminUser, "Admin");
+                Console.WriteLine("========================================");
+                Console.WriteLine("🌱 DÉBUT DU SEED DE DÉVELOPPEMENT");
+                Console.WriteLine("========================================");
 
-                var admin = new Admin
-                {
-                    FirstName = "Admin",
-                    LastName = "System",
-                    ApplicationUserId = adminUser.Id,
-                    User = adminUser
-                };
-                context.Admins.Add(admin);
-            }
+                // Ordre d'exécution important !
+                // 1. Allergies (indépendantes)
+                Console.WriteLine("📋 1/6 - Seed des allergies...");
+                await AllergySeed.SeedAsync(context);
+                Console.WriteLine("✓ Allergies créées");
+                
+                // 2. Médicaments avec leurs composants (indépendants)
+                Console.WriteLine("💊 2/6 - Seed des médicaments...");
+                await MedicineSeed.SeedAsync(context);
+                Console.WriteLine("✓ Médicaments créés");
+                
+                // 3. Associations médicament-allergie (dépend de 1 et 2)
+                Console.WriteLine("🔗 3/6 - Seed des associations médicament-allergie...");
+                await MedicineSeed.SeedMedicineAllergiesAsync(context);
+                Console.WriteLine("✓ Associations créées");
+                
+                // 4. Admin (indépendant)
+                Console.WriteLine("👑 4/6 - Seed de l'admin...");
+                await AdminSeed.SeedAsync(context, userManager);
+                Console.WriteLine("✓ Admin créé");
+                
+                // 5. Docteurs (indépendants)
+                Console.WriteLine("👨‍⚕️ 5/6 - Seed des docteurs...");
+                await DoctorSeed.SeedAsync(context, userManager);
+                Console.WriteLine("✓ Docteurs créés");
+                
+                // 6. Patients (dépend des docteurs et allergies)
+                Console.WriteLine("👥 6/6 - Seed des patients...");
+                await PatientSeed.SeedAsync(context, userManager);
+                Console.WriteLine("✓ Patients créés");
 
-            // Doctor
-            var doctorUser = await userManager.FindByEmailAsync("doctor@medmanager.com");
-            if (doctorUser == null)
-            {
-                doctorUser = new ApplicationUser
-                {
-                    UserName = "doctor@medmanager.com",
-                    Email = "doctor@medmanager.com",
-                    EmailConfirmed = true
-                };
-                await userManager.CreateAsync(doctorUser, "Doctor123!");
-                await userManager.AddToRoleAsync(doctorUser, "Doctor");
-
-                var doctor = new Doctor
-                {
-                    FirstName = "Jean",
-                    LastName = "Dupont",
-                    ApplicationUserId = doctorUser.Id,
-                    User = doctorUser
-                };
-                context.Doctors.Add(doctor);
-            }
-
-            // Patient
-            var patientUser = await userManager.FindByEmailAsync("patient@medmanager.com");
-            if (patientUser == null)
-            {
-                patientUser = new ApplicationUser
-                {
-                    UserName = "patient@medmanager.com",
-                    Email = "patient@medmanager.com",
-                    EmailConfirmed = true
-                };
-                await userManager.CreateAsync(patientUser, "Patient123!");
-                await userManager.AddToRoleAsync(patientUser, "Patient");
-
-                var patient = new Patient
-                {
-                    FirstName = "Marie",
-                    LastName = "Martin",
-                    Gender = Gender.Female,
-                    DateBirthday = new DateTime(1990, 5, 15),
-                    SocialSecurityNumber = "190055012345678",
-                    ApplicationUserId = patientUser.Id,
-                    User = patientUser
-                };
-                context.Patients.Add(patient);
-            }
-        }
-
-        private static async Task SeedMedicinesAsync(DatabaseContext context)
-        {
-            if (!context.Medicines.Any())
-            {
-                var medicines = new List<Medicine>
-                {
-                    new Medicine
-                    {
-                        Name = "Paracétamol",
-                        Description = "Antalgique et antipyrétique"
-                    },
-                    new Medicine
-                    {
-                        Name = "Ibuprofène",
-                        Description = "Anti-inflammatoire non stéroïdien (AINS)"
-                    },
-                    new Medicine
-                    {
-                        Name = "Amoxicilline",
-                        Description = "Antibiotique de la famille des pénicillines"
-                    },
-                    new Medicine
-                    {
-                        Name = "Doliprane",
-                        Description = "Antalgique à base de paracétamol"
-                    },
-                    new Medicine
-                    {
-                        Name = "Aspégic",
-                        Description = "Antiagrégant plaquettaire et antalgique"
-                    }
-                };
-
-                context.Medicines.AddRange(medicines);
                 await context.SaveChangesAsync();
+
+                Console.WriteLine("========================================");
+                Console.WriteLine("✅ SEED TERMINÉ AVEC SUCCÈS");
+                Console.WriteLine("========================================");
             }
-        }
-
-        private static async Task SeedAllergiesAsync(DatabaseContext context)
-        {
-            if (!context.Allergies.Any())
+            catch (Exception ex)
             {
-                var allergies = new List<Allergy>
+                Console.WriteLine("========================================");
+                Console.WriteLine("❌ ERREUR LORS DU SEED");
+                Console.WriteLine("========================================");
+                Console.WriteLine($"Message: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
                 {
-                    new Allergy
-                    {
-                        Name = "Pénicilline",
-                        Description = "Allergie aux antibiotiques de type pénicilline"
-                    },
-                    new Allergy
-                    {
-                        Name = "Arachides",
-                        Description = "Allergie alimentaire aux cacahuètes"
-                    },
-                    new Allergy
-                    {
-                        Name = "Latex",
-                        Description = "Allergie au latex naturel"
-                    },
-                    new Allergy
-                    {
-                        Name = "Pollen",
-                        Description = "Allergie saisonnière au pollen"
-                    },
-                    new Allergy
-                    {
-                        Name = "Aspirine",
-                        Description = "Allergie à l'acide acétylsalicylique"
-                    }
-                };
-
-                context.Allergies.AddRange(allergies);
-                await context.SaveChangesAsync();
-            }
-        }
-
-        private static async Task SeedHistoriesAsync(DatabaseContext context)
-        {
-            if (!context.Histories.Any())
-            {
-                var histories = new List<History>
-                {
-                    new History
-                    {
-                        Description = "Hypertension artérielle",
-                        Date = DateTime.Now.AddYears(-5)
-                    },
-                    new History
-                    {
-                        Description = "Diabète de type 2",
-                        Date = DateTime.Now.AddYears(-3)
-                    },
-                    new History
-                    {
-                        Description = "Asthme",
-                        Date = DateTime.Now.AddYears(-10)
-                    },
-                    new History
-                    {
-                        Description = "Fracture du bras droit",
-                        Date = DateTime.Now.AddYears(-2)
-                    }
-                };
-
-                context.Histories.AddRange(histories);
-                await context.SaveChangesAsync();
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                
+                Console.WriteLine("========================================");
+                
+                // NE PAS throw pour ne pas bloquer le démarrage
+                // L'utilisateur verra l'erreur dans les logs
             }
         }
     }

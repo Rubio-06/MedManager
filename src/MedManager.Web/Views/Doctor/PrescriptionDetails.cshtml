@@ -1,0 +1,205 @@
+@model MedManager.Web.Models.ViewModels.PrescriptionDetailsViewModel
+
+@{
+    ViewData["Title"] = "Détails de l'ordonnance";
+    Layout = "_ManagementLayout";
+}
+
+<!-- Breadcrumb Navigation -->
+<div class="flex items-center text-sm text-gray-600 mb-6">
+    <a asp-action="Prescriptions" class="hover:text-indigo-600 transition duration-150">Ordonnances</a>
+    <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+    <span class="text-gray-900">Ordonnance #@Model.Id</span>
+</div>
+
+<div class="max-w-5xl mx-auto">
+    <!-- Header avec actions -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Ordonnance #@Model.Id</h1>
+            <p class="text-gray-600 mt-1">Créée le @Model.DateCreated.ToString("dd MMMM yyyy à HH:mm")</p>
+        </div>
+        <div class="flex gap-3">
+            <a asp-action="PatientProfile" asp-route-id="@Model.PatientId" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150 font-medium">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                Profil patient
+            </a>
+            <a asp-action="Prescriptions" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                Retour aux ordonnances
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar - Informations -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Informations patient -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    Patient
+                </h2>
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <p class="text-gray-500">Nom complet</p>
+                        <p class="font-medium text-gray-900">@Model.PatientFullName</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Âge</p>
+                        <p class="font-medium text-gray-900">@Model.PatientAge ans (@Model.PatientGender)</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Email</p>
+                        <p class="font-medium text-gray-900">@Model.PatientEmail</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">N° Sécurité sociale</p>
+                        <p class="font-medium text-gray-900 font-mono text-xs">@Model.SocialSecurityNumber</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Médecin prescripteur -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Prescripteur
+                </h2>
+                <div class="space-y-2 text-sm">
+                    <p class="font-medium text-gray-900">@Model.DoctorFullName</p>
+                    <p class="text-gray-600">Médecin généraliste</p>
+                </div>
+            </div>
+
+            <!-- Allergies du patient -->
+            @if (Model.PatientAllergies.Any())
+            {
+                <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+                    <h2 class="text-lg font-semibold text-red-900 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        Allergies
+                    </h2>
+                    <ul class="space-y-2">
+                        @foreach (var allergy in Model.PatientAllergies)
+                        {
+                            <li class="text-sm text-red-800 font-medium">• @allergy.Name</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <!-- Contenu principal - Médicaments prescrits -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Médicaments prescrits</h2>
+                    <p class="text-sm text-gray-600 mt-1">@Model.Medicines.Count médicament@(Model.Medicines.Count > 1 ? "s" : "")</p>
+                </div>
+
+                <!-- Liste des médicaments -->
+                <div class="p-6">
+                    <div class="space-y-4">
+                        @foreach (var medicine in Model.Medicines)
+                        {
+                            <div class="border-2 border-gray-200 rounded-lg p-5 hover:border-indigo-300 transition duration-150">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <h3 class="text-lg font-bold text-gray-900">@medicine.MedicineName</h3>
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                @medicine.Quantity unité@(medicine.Quantity > 1 ? "s" : "")
+                                            </span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(medicine.Composition))
+                                        {
+                                            <p class="text-sm text-gray-600 mb-3 italic">@medicine.Composition</p>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2 bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-indigo-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-700">Posologie</p>
+                                            <p class="text-sm text-gray-900">@medicine.Dosage</p>
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(medicine.Duration))
+                                    {
+                                        <div class="flex items-start">
+                                            <svg class="w-5 h-5 text-indigo-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-700">Durée du traitement</p>
+                                                <p class="text-sm text-gray-900">@medicine.Duration</p>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(medicine.Instructions))
+                                    {
+                                        <div class="flex items-start">
+                                            <svg class="w-5 h-5 text-indigo-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-700">Conseils d'utilisation</p>
+                                                <p class="text-sm text-gray-900">@medicine.Instructions</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 text-xs text-gray-500 text-center">
+                    <p>Cette ordonnance a été créée électroniquement le @Model.DateCreated.ToString("dd/MM/yyyy à HH:mm")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles pour l'impression -->
+<style>
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        .max-w-5xl, .max-w-5xl * {
+            visibility: visible;
+        }
+        .max-w-5xl {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        nav, .breadcrumb, button, a {
+            display: none !important;
+        }
+    }
+</style>

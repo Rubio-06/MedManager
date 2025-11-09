@@ -281,103 +281,162 @@
                 }
                 else
                 {
-                    <div class="space-y-6">
+                    <div class="space-y-3">
                         @foreach (var prescription in Model.Prescriptions)
                         {
-                            <div class="border-2 border-gray-200 rounded-lg overflow-hidden">
-                                <!-- En-tête de l'ordonnance -->
-                                <div class="bg-indigo-50 px-4 py-3 flex items-center justify-between">
+                            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition duration-150">
+                                <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <div class="shrink-0 h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="shrink-0 h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-medium text-gray-900">Ordonnance du @prescription.DateCreated.ToString("dd/MM/yyyy")</div>
-                                            <div class="text-xs text-gray-600">@prescription.DateCreated.ToString("HH:mm") - @prescription.Medicines.Count médicament@(prescription.Medicines.Count > 1 ? "s" : "")</div>
+                                            <div class="text-sm font-medium text-gray-900">@prescription.DateCreated.ToString("dd/MM/yyyy à HH:mm")</div>
+                                            <div class="text-xs text-gray-600">@prescription.Medicines.Count médicament@(prescription.Medicines.Count > 1 ? "s" : "")</div>
                                         </div>
                                     </div>
-                                    <button onclick="deletePrescriptionFromProfile(@prescription.Id, '@prescription.DateCreated.ToString("dd/MM/yyyy")')" 
-                                           class="text-red-600 hover:text-red-800 transition duration-150"
-                                           title="Supprimer l'ordonnance">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                                
-                                <!-- Tableau des médicaments -->
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Médicament
-                                                </th>
-                                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Quantité
-                                                </th>
-                                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Dosage
-                                                </th>
-                                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Durée
-                                                </th>
-                                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Instructions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            @foreach (var medicine in prescription.Medicines)
-                                            {
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-4 py-3 whitespace-nowrap">
-                                                        <div class="text-sm font-medium text-gray-900">@medicine.MedicineName</div>
-                                                    </td>
-                                                    <td class="px-4 py-3 whitespace-nowrap">
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                            @medicine.Quantity
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-4 py-3">
-                                                        <div class="text-sm text-gray-900">@medicine.Dosage</div>
-                                                    </td>
-                                                    <td class="px-4 py-3">
-                                                        <div class="text-sm text-gray-600">
-                                                            @if (!string.IsNullOrEmpty(medicine.Duration))
-                                                            {
-                                                                @medicine.Duration
-                                                            }
-                                                            else
-                                                            {
-                                                                <span class="text-gray-400 italic">-</span>
-                                                            }
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-4 py-3">
-                                                        <div class="text-sm text-gray-600 max-w-xs">
-                                                            @if (!string.IsNullOrEmpty(medicine.Instructions))
-                                                            {
-                                                                @medicine.Instructions
-                                                            }
-                                                            else
-                                                            {
-                                                                <span class="text-gray-400 italic">-</span>
-                                                            }
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
+                                    <div class="flex items-center gap-2">
+                                        <a asp-action="PrescriptionDetails" asp-route-id="@prescription.Id" 
+                                           class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition duration-150"
+                                           title="Voir les détails">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                            Consulter
+                                        </a>
+                                        <button onclick="deletePrescriptionFromProfile(@prescription.Id, '@prescription.DateCreated.ToString("dd/MM/yyyy")')" 
+                                               class="text-red-600 hover:text-red-800 transition duration-150"
+                                               title="Supprimer l'ordonnance">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         }
                     </div>
                 }
             </div>
+        </div>
+    </div>
+
+    <!-- Antécédents médicaux -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-semibold text-gray-900">Antécédents médicaux</h2>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                    @Model.MedicalHistories.Count
+                </span>
+            </div>
+            <button onclick="openMedicalHistoryModal()" class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-150">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Ajouter
+            </button>
+        </div>
+        <div class="p-6">
+            @if (Model.MedicalHistories.Any())
+            {
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <input type="text" 
+                           id="medicalHistorySearchProfile" 
+                           onkeyup="filterProfileMedicalHistories()"
+                           placeholder="Rechercher un antécédent..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+
+                <!-- Medical Histories List -->
+                <div class="space-y-3">
+                    @foreach (var history in Model.MedicalHistories.OrderByDescending(h => h.Date))
+                    {
+                        <div class="medical-history-item border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition"
+                             data-history-title="@history.Title.ToLower()"
+                             data-history-description="@(history.Description?.ToLower() ?? "")"
+                             data-history-type="@history.TypeDisplay.ToLower()">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                            @(history.Type == MedManager.Domain.Models.MedicalHistoryType.ChronicDisease ? "bg-purple-100 text-purple-800" :
+                                              history.Type == MedManager.Domain.Models.MedicalHistoryType.Surgery ? "bg-pink-100 text-pink-800" :
+                                              history.Type == MedManager.Domain.Models.MedicalHistoryType.Hospitalization ? "bg-indigo-100 text-indigo-800" :
+                                              history.Type == MedManager.Domain.Models.MedicalHistoryType.FamilyHistory ? "bg-blue-100 text-blue-800" :
+                                              history.Type == MedManager.Domain.Models.MedicalHistoryType.Vaccination ? "bg-green-100 text-green-800" :
+                                              history.Type == MedManager.Domain.Models.MedicalHistoryType.CurrentCondition ? "bg-orange-100 text-orange-800" :
+                                              "bg-gray-100 text-gray-800")">
+                                            @history.TypeDisplay
+                                        </span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            @(history.Severity == MedManager.Domain.Models.Severity.Critical ? "bg-red-100 text-red-800" :
+                                              history.Severity == MedManager.Domain.Models.Severity.High ? "bg-orange-100 text-orange-800" :
+                                              history.Severity == MedManager.Domain.Models.Severity.Medium ? "bg-yellow-100 text-yellow-800" :
+                                              "bg-green-100 text-green-800")">
+                                            @history.SeverityDisplay
+                                        </span>
+                                        <span class="text-sm text-gray-500">@history.Date.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <h4 class="text-base font-semibold text-gray-900 mb-1">@history.Title</h4>
+                                    @if (!string.IsNullOrWhiteSpace(history.Description))
+                                    {
+                                        <p class="text-sm text-gray-600">@history.Description</p>
+                                    }
+                                </div>
+                                <div class="flex items-center gap-2 ml-4">
+                                    <button onclick="editMedicalHistory(@history.Id, '@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { 
+                                            id = history.Id,
+                                            type = (int)history.Type,
+                                            title = history.Title,
+                                            description = history.Description,
+                                            date = history.Date.ToString("yyyy-MM-dd"),
+                                            severity = (int)history.Severity
+                                        }))')" 
+                                            class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="deleteMedicalHistory(@history.Id, '@history.Title')" 
+                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noMedicalHistoryResults" class="hidden text-center py-8">
+                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-gray-600">Aucun antécédent ne correspond à votre recherche</p>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8">
+                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-gray-600 mb-3">Aucun antécédent médical enregistré</p>
+                    <button onclick="openMedicalHistoryModal()" class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-150">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Ajouter le premier antécédent
+                    </button>
+                </div>
+            }
         </div>
     </div>
 
@@ -388,15 +447,16 @@
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button disabled class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition duration-150 cursor-not-allowed opacity-50">
-                    <svg class="w-8 h-8 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="@Url.Action("CreatePrescription", "Doctor", new { patientId = Model.Id })" 
+                   class="flex items-center p-4 border-2 border-green-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition duration-150 cursor-pointer">
+                    <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     <div class="text-left">
                         <p class="font-medium text-gray-900">Nouvelle ordonnance</p>
-                        <p class="text-sm text-gray-600">Prochainement</p>
+                        <p class="text-sm text-gray-600">Prescrire des médicaments</p>
                     </div>
-                </button>
+                </a>
 
                 <button onclick="openAllergyModal()" class="flex items-center p-4 border-2 border-indigo-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition duration-150 cursor-pointer">
                     <svg class="w-8 h-8 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,12 +468,12 @@
                     </div>
                 </button>
 
-                <button disabled class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition duration-150 cursor-not-allowed opacity-50">
-                    <svg class="w-8 h-8 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                <button disabled class="flex items-center p-4 border-2 border-gray-200 rounded-lg transition duration-150 cursor-not-allowed opacity-50">
+                    <svg class="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                     <div class="text-left">
-                        <p class="font-medium text-gray-900">Historique médical</p>
+                        <p class="font-medium text-gray-900">Antécédents</p>
                         <p class="text-sm text-gray-600">Prochainement</p>
                     </div>
                 </button>
@@ -500,6 +560,104 @@
             </button>
             <button onclick="addSelectedAllergies()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium">
                 Ajouter les allergies
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter/Modifier Antécédent Médical -->
+<div id="medicalHistoryModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+            <h3 id="medicalHistoryModalTitle" class="text-xl font-semibold text-gray-900">Ajouter un antécédent médical</h3>
+            <button onclick="closeMedicalHistoryModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form id="medicalHistoryForm" class="p-6">
+            <input type="hidden" id="medicalHistoryId" value="0">
+            
+            <!-- Type -->
+            <div class="mb-4">
+                <label for="historyType" class="block text-sm font-medium text-gray-700 mb-2">
+                    Type d'antécédent <span class="text-red-500">*</span>
+                </label>
+                <select id="historyType" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="">Sélectionnez un type</option>
+                    <option value="0">Maladie chronique</option>
+                    <option value="1">Chirurgie</option>
+                    <option value="2">Hospitalisation</option>
+                    <option value="3">Antécédents familiaux</option>
+                    <option value="4">Vaccination</option>
+                    <option value="5">État actuel</option>
+                    <option value="6">Autre</option>
+                </select>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-4">
+                <label for="historyTitle" class="block text-sm font-medium text-gray-700 mb-2">
+                    Titre <span class="text-red-500">*</span>
+                </label>
+                <input type="text" 
+                       id="historyTitle" 
+                       required 
+                       maxlength="200"
+                       placeholder="Ex: Diabète de type 2, Appendicectomie..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <label for="historyDescription" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                </label>
+                <textarea id="historyDescription" 
+                          rows="4"
+                          placeholder="Détails additionnels, contexte, traitement..."
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"></textarea>
+            </div>
+
+            <!-- Date -->
+            <div class="mb-4">
+                <label for="historyDate" class="block text-sm font-medium text-gray-700 mb-2">
+                    Date <span class="text-red-500">*</span>
+                </label>
+                <input type="date" 
+                       id="historyDate" 
+                       required
+                       max="@DateTime.Now.ToString("yyyy-MM-dd")"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            </div>
+
+            <!-- Severity -->
+            <div class="mb-4">
+                <label for="historySeverity" class="block text-sm font-medium text-gray-700 mb-2">
+                    Gravité <span class="text-red-500">*</span>
+                </label>
+                <select id="historySeverity" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="0">Faible</option>
+                    <option value="1">Modérée</option>
+                    <option value="2">Élevée</option>
+                    <option value="3">Critique</option>
+                </select>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+            <button onclick="closeMedicalHistoryModal()" 
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150 font-medium">
+                Annuler
+            </button>
+            <button onclick="saveMedicalHistory()" 
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150 font-medium">
+                Enregistrer
             </button>
         </div>
     </div>
@@ -734,6 +892,150 @@
                     });
                 }
             );
+        }
+
+        // Medical History Functions
+        function openMedicalHistoryModal() {
+            document.getElementById('medicalHistoryModal').style.display = 'flex';
+            document.getElementById('medicalHistoryModalTitle').textContent = 'Ajouter un antécédent médical';
+            document.getElementById('medicalHistoryId').value = '0';
+            document.getElementById('historyType').value = '';
+            document.getElementById('historyTitle').value = '';
+            document.getElementById('historyDescription').value = '';
+            document.getElementById('historyDate').value = '';
+            document.getElementById('historySeverity').value = '0';
+        }
+
+        function closeMedicalHistoryModal() {
+            document.getElementById('medicalHistoryModal').style.display = 'none';
+        }
+
+        function editMedicalHistory(id, dataJson) {
+            const data = JSON.parse(dataJson);
+            document.getElementById('medicalHistoryModal').style.display = 'flex';
+            document.getElementById('medicalHistoryModalTitle').textContent = 'Modifier l\'antécédent médical';
+            document.getElementById('medicalHistoryId').value = data.id;
+            document.getElementById('historyType').value = data.type;
+            document.getElementById('historyTitle').value = data.title;
+            document.getElementById('historyDescription').value = data.description || '';
+            document.getElementById('historyDate').value = data.date;
+            document.getElementById('historySeverity').value = data.severity;
+        }
+
+        function saveMedicalHistory() {
+            const id = parseInt(document.getElementById('medicalHistoryId').value);
+            const type = document.getElementById('historyType').value;
+            const title = document.getElementById('historyTitle').value.trim();
+            const description = document.getElementById('historyDescription').value.trim();
+            const date = document.getElementById('historyDate').value;
+            const severity = document.getElementById('historySeverity').value;
+
+            // Validation
+            if (!type) {
+                alert('Veuillez sélectionner un type d\'antécédent');
+                return;
+            }
+            if (!title) {
+                alert('Veuillez saisir un titre');
+                return;
+            }
+            if (!date) {
+                alert('Veuillez sélectionner une date');
+                return;
+            }
+
+            // Créer le FormData
+            const formData = new FormData();
+            formData.append('PatientId', @Model.Id);
+            formData.append('Type', type);
+            formData.append('Title', title);
+            formData.append('Description', description);
+            formData.append('Date', date);
+            formData.append('Severity', severity);
+
+            // Ajouter le token CSRF
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            formData.append('__RequestVerificationToken', token);
+
+            const url = id === 0 ? '@Url.Action("AddMedicalHistory", "Doctor")' : '@Url.Action("UpdateMedicalHistory", "Doctor")';
+            
+            if (id !== 0) {
+                formData.append('Id', id);
+            }
+
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Erreur lors de l\'enregistrement');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de l\'enregistrement de l\'antécédent');
+            });
+        }
+
+        function deleteMedicalHistory(id, title) {
+            showConfirmDialog(
+                'Supprimer cet antécédent ?',
+                `Êtes-vous sûr de vouloir supprimer l'antécédent "<strong>${title}</strong>" ?<br><br>Cette action est irréversible.`,
+                'Supprimer',
+                'Annuler',
+                function() {
+                    // Récupérer le token CSRF
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    // Créer un FormData
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', token);
+
+                    // Envoyer la requête
+                    fetch('@Url.Action("DeleteMedicalHistory", "Doctor")', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.message || 'Erreur lors de la suppression');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        alert('Erreur lors de la suppression de l\'antécédent');
+                    });
+                }
+            );
+        }
+
+        function filterProfileMedicalHistories() {
+            const searchTerm = document.getElementById('medicalHistorySearchProfile').value.toLowerCase();
+            const historyItems = document.querySelectorAll('.medical-history-item');
+            let visibleCount = 0;
+
+            historyItems.forEach(item => {
+                const title = item.getAttribute('data-history-title') || '';
+                const description = item.getAttribute('data-history-description') || '';
+                const type = item.getAttribute('data-history-type') || '';
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm) || type.includes(searchTerm)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            document.getElementById('noMedicalHistoryResults').classList.toggle('hidden', visibleCount > 0);
         }
     </script>
 }

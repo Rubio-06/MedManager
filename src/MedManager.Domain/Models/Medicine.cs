@@ -22,6 +22,9 @@ namespace MedManager.Domain.Models
         [MaxLength(1000)]
         public string? SideEffects { get; set; }
 
+        // Components (composition)
+        public virtual ICollection<MedicineComponent> Components { get; set; } = [];
+
         // Associated Tables (n-n)
         public virtual ICollection<PrescriptionMedicine> PrescriptionMedicines { get; set; } = [];
         public virtual ICollection<MedicineAllergy> MedicineAllergies { get; set; } = [];

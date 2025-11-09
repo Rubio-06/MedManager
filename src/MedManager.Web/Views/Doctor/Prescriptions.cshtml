@@ -88,13 +88,60 @@
         </div>
 
         <!-- Bouton Créer -->
-        <button disabled
-           class="w-full sm:w-auto px-6 py-2 bg-gray-400 text-white rounded-lg font-medium inline-flex items-center justify-center cursor-not-allowed shrink-0 opacity-60">
+        <button onclick="openPatientSelectionModal()"
+           class="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium inline-flex items-center justify-center hover:bg-indigo-700 transition duration-150 shrink-0">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            Nouvelle Ordonnance (prochainement)
+            Nouvelle Ordonnance
         </button>
+    </div>
+
+    <!-- Modal de sélection de patient -->
+    <div id="patientSelectionModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Overlay -->
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true" onclick="closePatientSelectionModal()"></div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full" onclick="event.stopPropagation()">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Sélectionner un patient
+                        </h3>
+                        <button type="button" onclick="closePatientSelectionModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Barre de recherche -->
+                    <div class="mb-4">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   id="patientSearchInput" 
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+                                   placeholder="Rechercher un patient (nom, prénom, email)...">
+                        </div>
+                    </div>
+
+                    <!-- Liste des patients -->
+                    <div class="max-h-96 overflow-y-auto" id="patientsList">
+                        <p class="text-center text-gray-500 py-8">Chargement des patients...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Table des ordonnances -->
@@ -157,21 +204,14 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-3">
-                                <button disabled 
-                                       class="text-gray-400 cursor-not-allowed"
-                                       title="Voir (prochainement)">
+                                <a asp-action="PrescriptionDetails" asp-route-id="@prescription.Id"
+                                       class="text-indigo-600 hover:text-indigo-900 transition duration-150"
+                                       title="Consulter l'ordonnance">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
-                                </button>
-                                <button disabled 
-                                       class="text-gray-400 cursor-not-allowed"
-                                       title="Imprimer (prochainement)">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                                    </svg>
-                                </button>
+                                </a>
                                 <button onclick="deletePrescription(@prescription.Id, '@prescription.DateCreated.ToString("dd/MM/yyyy")', '@prescription.PatientName')" 
                                        class="text-red-600 hover:text-red-900 transition duration-150"
                                        title="Supprimer l'ordonnance">
@@ -215,6 +255,7 @@
     <script>
         // Variables globales pour les filtres
         let currentSort = 'desc';
+        let allPatients = [];
 
         // Fonction de suppression d'ordonnance
         function deletePrescription(prescriptionId, date, patientName) {
@@ -358,6 +399,104 @@
                     if (icon) icon.style.transform = 'rotate(0deg)';
                 }
             });
+        });
+
+        // ===== Gestion de la modal de sélection de patient =====
+        function openPatientSelectionModal() {
+            const modal = document.getElementById('patientSelectionModal');
+            modal.classList.remove('hidden');
+            loadPatients();
+        }
+
+        function closePatientSelectionModal() {
+            const modal = document.getElementById('patientSelectionModal');
+            modal.classList.add('hidden');
+            document.getElementById('patientSearchInput').value = '';
+        }
+
+        function loadPatients() {
+            const patientsList = document.getElementById('patientsList');
+            patientsList.innerHTML = '<p class="text-center text-gray-500 py-8">Chargement des patients...</p>';
+
+            fetch('@Url.Action("GetDoctorPatients", "Doctor")')
+                .then(response => response.json())
+                .then(data => {
+                    allPatients = data;
+                    renderPatients(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    patientsList.innerHTML = '<p class="text-center text-red-500 py-8">Erreur lors du chargement des patients</p>';
+                });
+        }
+
+        function renderPatients(patients) {
+            const patientsList = document.getElementById('patientsList');
+            
+            if (patients.length === 0) {
+                patientsList.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-500">Aucun patient trouvé</p>
+                    </div>
+                `;
+                return;
+            }
+
+            patientsList.innerHTML = patients.map(patient => `
+                <div class="border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer" onclick="selectPatient(${patient.id})">
+                    <div class="px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <span class="text-indigo-600 font-semibold text-sm">${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-900">${patient.firstName} ${patient.lastName}</p>
+                                <p class="text-sm text-gray-500">${patient.email || ''}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            ${patient.allergies && patient.allergies.length > 0 ? `
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    ${patient.allergies.length} allergie(s)
+                                </span>
+                            ` : ''}
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectPatient(patientId) {
+            window.location.href = '@Url.Action("CreatePrescription", "Doctor")?patientId=' + patientId;
+        }
+
+        // Filtrer les patients dans la modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('patientSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    if (searchTerm === '') {
+                        renderPatients(allPatients);
+                    } else {
+                        const filtered = allPatients.filter(patient => {
+                            const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
+                            const email = (patient.email || '').toLowerCase();
+                            return fullName.includes(searchTerm) || email.includes(searchTerm);
+                        });
+                        renderPatients(filtered);
+                    }
+                });
+            }
         });
     </script>
 }

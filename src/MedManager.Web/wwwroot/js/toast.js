@@ -9,7 +9,7 @@
       container = document.createElement("div");
       container.id = "toast-container";
       container.className =
-        "fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-3 pointer-events-none";
+        "fixed bottom-4 right-4 z-[9999] flex flex-col-reverse gap-3 pointer-events-none";
       container.style.maxWidth = "420px";
       document.body.appendChild(container);
     }
