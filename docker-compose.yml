@@ -11,7 +11,12 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      CONNECTION_STRING: ${CONNECTION_STRING:-server=db;port=3306;database=${MYSQL_DATABASE:-medmanager};user=root;password=${MYSQL_ROOT_PASSWORD:-medmanager}}
+      CONNECTION_STRING: ${CONNECTION_STRING:-server=db;port=3306;database=medmanager;user=root;password=medmanager}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-medmanager}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-medmanager}
       DB_INIT_MAX_RETRIES: ${DB_INIT_MAX_RETRIES:-10}
       DB_INIT_RETRY_DELAY_SECONDS: ${DB_INIT_RETRY_DELAY_SECONDS:-5}
 

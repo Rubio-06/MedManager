@@ -1,4 +1,5 @@
 using MedManager.Infrastructure.Context;
+using MedManager.Infrastructure.Configuration;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,14 +11,7 @@ namespace MedManager.Infrastructure.Services
     {
         public static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration config)
         {
-            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
-                ?? config["CONNECTION_STRING"];
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException(
-                    "Database connection string not found. Set CONNECTION_STRING in .env.");
-            }
+            var connectionString = DatabaseConnectionStringResolver.Resolve(config);
 
             services.AddDbContext<DatabaseContext>(options =>
                 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mySqlOptions =>

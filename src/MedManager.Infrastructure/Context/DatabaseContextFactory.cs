@@ -15,13 +15,7 @@ namespace MedManager.Infrastructure.Context
             // Utiliser une version MySQL spécifique au lieu de AutoDetect pour éviter les problèmes de connexion
             var serverVersion = new MySqlServerVersion(new Version(8, 0, 21));
 
-            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException(
-                    "Database connection string not found. Set CONNECTION_STRING in .env.");
-            }
+            var connectionString = DatabaseConnectionStringResolver.Resolve();
 
             optionsBuilder.UseMySql(connectionString, serverVersion, mySqlOptions =>
             {
