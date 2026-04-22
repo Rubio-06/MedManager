@@ -36,7 +36,7 @@ RUN dotnet publish src/MedManager.Web/MedManager.Web.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 COPY --from=build /app/publish .
