@@ -66,13 +66,11 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 // Default route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+  ;
 
 // Area routes (if needed later)
 app.MapControllerRoute(
