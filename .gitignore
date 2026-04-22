@@ -23,3 +23,5 @@ src/MedManager.Web/appsettings.Local.json
 # OS stuff
 .DS_Store
 Thumbs.db
+
+.env
