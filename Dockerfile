@@ -3,7 +3,7 @@ WORKDIR /web
 
 # Cache npm dependencies first.
 COPY src/MedManager.Web/package*.json ./
-RUN npm ci --no-audit --no-fund
+RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 
 COPY src/MedManager.Web/ ./
 RUN npm run css:build
