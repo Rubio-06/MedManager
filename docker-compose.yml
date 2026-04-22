@@ -5,37 +5,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      CONNECTION_STRING: ${CONNECTION_STRING:-server=db;port=3306;database=medmanager;user=medmanager;password=medmanager}
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_NAME: ${DB_NAME:-medmanager}
-      DB_USER: ${DB_USER:-medmanager}
-      DB_PASSWORD: ${DB_PASSWORD:-medmanager}
+      CONNECTION_STRING: ${CONNECTION_STRING}
       DB_INIT_MAX_RETRIES: ${DB_INIT_MAX_RETRIES:-10}
       DB_INIT_RETRY_DELAY_SECONDS: ${DB_INIT_RETRY_DELAY_SECONDS:-5}
-
-  db:
-    image: mariadb:11
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-medmanager}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-medmanager}
-      MYSQL_USER: ${MYSQL_USER:-medmanager}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-medmanager}
-    healthcheck:
-      test:
-        ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-volumes:
-  mysql_data:
