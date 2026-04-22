@@ -1,4 +1,4 @@
-# MedManager Refactor
+# MedManager
 
 MedManager est une application web pour gérer des patients, des médecins, des médicaments, des allergies et des prescriptions.
 
