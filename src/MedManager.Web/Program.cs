@@ -1,7 +1,10 @@
 using MedManager.Application.Interfaces;
 using MedManager.Application.Services;
+using MedManager.Infrastructure.Configuration;
 using MedManager.Infrastructure;
 using MedManager.Infrastructure.Database;
+
+DotEnvLoader.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
