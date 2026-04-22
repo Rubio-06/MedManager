@@ -1,50 +1,45 @@
-# =========================
-# 1. NODE (Tailwind build)
-# =========================
-FROM node:20 AS node-build
-
+FROM node:20-alpine AS node-build
 WORKDIR /web
 
-# Copie uniquement package.json pour cache npm
+# Cache npm dependencies first.
 COPY src/MedManager.Web/package*.json ./
-RUN npm install
+RUN npm ci --no-audit --no-fund
 
-# Copie tout le frontend
-COPY src/MedManager.Web ./
-
-# Build Tailwind / CSS
+COPY src/MedManager.Web/ ./
 RUN npm run css:build
 
 
-# =========================
-# 2. DOTNET BUILD
-# =========================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-
 WORKDIR /src
 
-COPY src ./src
+# Copy project files first to maximize restore cache.
+COPY MedManagr.sln ./
+COPY src/MedManager.Web/MedManager.Web.csproj src/MedManager.Web/
+COPY src/MedManager.Application/MedManager.Application.csproj src/MedManager.Application/
+COPY src/MedManager.Domain/MedManager.Domain.csproj src/MedManager.Domain/
+COPY src/MedManager.Infrastructure/MedManager.Infrastructure.csproj src/MedManager.Infrastructure/
 
-# Restore
 RUN dotnet restore src/MedManager.Web/MedManager.Web.csproj
 
-# Publish (sans npm ici !)
+# Copy remaining sources.
+COPY src/ ./src/
+
+# Inject built Tailwind assets from Node stage.
+COPY --from=node-build /web/wwwroot/css/style.css /src/src/MedManager.Web/wwwroot/css/style.css
+
 RUN dotnet publish src/MedManager.Web/MedManager.Web.csproj \
     -c Release \
-    -o /app/publish
+    -o /app/publish \
+    /p:SkipTailwindBuild=true
 
 
-# =========================
-# 3. RUNTIME
-# =========================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
-
 WORKDIR /app
 
-COPY --from=build /app/publish .
-COPY --from=node-build /web/wwwroot ./wwwroot
-
 ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+COPY --from=build /app/publish .
 
 EXPOSE 8080
 

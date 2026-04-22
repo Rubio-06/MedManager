@@ -1,26 +1,30 @@
-version: "3.9"
-
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: medmanager-web
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-      ConnectionStrings__DefaultConnection: server=${DB_HOST};port=${DB_PORT};database=${DB_NAME};user=${DB_USER};password=${DB_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      CONNECTION_STRING: server=db;port=3306;database=${MYSQL_DATABASE:-medmanager};user=root;password=${MYSQL_ROOT_PASSWORD}
 
   db:
     image: mariadb:11
-    container_name: medmanager-db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-medmanager}
+    healthcheck:
+      test:
+        ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     volumes:
       - mysql_data:/var/lib/mysql
 

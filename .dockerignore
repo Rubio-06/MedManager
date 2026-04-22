@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+.git/
+.gitignore
+.vscode/
+README.md
+**/*.user
+**/*.suo
+**/*.swp
+**/*.tmp

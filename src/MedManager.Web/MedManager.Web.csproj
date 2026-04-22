@@ -18,7 +18,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <Target Name="TailwindBuild" BeforeTargets="Build">
+  <Target Name="TailwindBuild" BeforeTargets="Build" Condition="'$(SkipTailwindBuild)' != 'true'">
     <Exec Command="npm run css:build" />
   </Target>
 
