@@ -248,7 +248,8 @@ namespace MedManager.Infrastructure.Database
                 return;
             }
 
-            await SeedData.DevelopmentSeedData.SeedAsync(context, userManager, roleManager);
+            var cleanupLegacyDemoUsers = GetBoolEnvironmentVariable("CLEANUP_LEGACY_DEMO_USERS", true);
+            await SeedData.ProductionDemoSeedData.SeedAsync(context, userManager, roleManager, cleanupLegacyDemoUsers);
 
             await context.SaveChangesAsync();
         }
