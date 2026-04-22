@@ -12,6 +12,7 @@ namespace MedManager.Infrastructure.Services
         public static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration config)
         {
             var connectionString = DatabaseConnectionStringResolver.Resolve(config);
+            Console.WriteLine($"Database target resolved to: {DatabaseConnectionStringResolver.DescribeTarget(connectionString)}");
 
             services.AddDbContext<DatabaseContext>(options =>
                 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mySqlOptions =>
