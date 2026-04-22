@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
 using MedManager.Domain.Models;
 using MedManager.Domain.Models.Users;
 using MedManager.Infrastructure.Context;
@@ -11,42 +12,62 @@ namespace MedManager.Infrastructure.Database
     {
         public static async Task Initialize(IServiceProvider serviceProvider, string environment)
         {
-            using var scope = serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var maxRetries = GetIntEnvironmentVariable("DB_INIT_MAX_RETRIES", 10);
+            var delaySeconds = GetIntEnvironmentVariable("DB_INIT_RETRY_DELAY_SECONDS", 5);
 
-            try
+            for (var attempt = 1; attempt <= maxRetries; attempt++)
             {
-                // CRÉER LA TABLE MEDICINECOMPONENTS EN PREMIER (avant MigrateAsync)
-                await EnsureMedicineComponentsTableExists(context);
-
-                // CRÉER LA TABLE MEDICALHISTORIES
-                await EnsureMedicalHistoriesTableExists(context);
-
-                // Ensure database is created and migrations are applied
-                await context.Database.MigrateAsync();
-
-                // Seed data based on environment
-                switch (environment.ToLower())
+                try
                 {
-                    case "development":
-                        await SeedDevelopmentData(context, userManager, roleManager);
-                        break;
-                    case "test":
-                        await SeedTestData(context, userManager, roleManager);
-                        break;
-                    case "production":
-                        await SeedProductionData(context, userManager, roleManager);
-                        break;
+                    using var scope = serviceProvider.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                    // CRÉER LA TABLE MEDICINECOMPONENTS EN PREMIER (avant MigrateAsync)
+                    await EnsureMedicineComponentsTableExists(context);
+
+                    // CRÉER LA TABLE MEDICALHISTORIES
+                    await EnsureMedicalHistoriesTableExists(context);
+
+                    // Ensure database is created and migrations are applied
+                    await context.Database.MigrateAsync();
+
+                    // Seed data based on environment
+                    switch (environment.ToLower())
+                    {
+                        case "development":
+                            await SeedDevelopmentData(context, userManager, roleManager);
+                            break;
+                        case "test":
+                            await SeedTestData(context, userManager, roleManager);
+                            break;
+                        case "production":
+                            await SeedProductionData(context, userManager, roleManager);
+                            break;
+                    }
+
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERREUR INITIALISATION DATABASE (tentative {attempt}/{maxRetries}): {ex.Message}");
+
+                    if (attempt == maxRetries)
+                    {
+                        Console.WriteLine($"Stack: {ex.StackTrace}");
+                        throw;
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ERREUR INITIALISATION DATABASE: {ex.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}");
-                throw;
-            }
+        }
+
+        private static int GetIntEnvironmentVariable(string name, int fallback)
+        {
+            var value = Environment.GetEnvironmentVariable(name);
+            return int.TryParse(value, out var parsedValue) ? parsedValue : fallback;
         }
 
         private static async Task EnsureMedicineComponentsTableExists(DatabaseContext context)
@@ -54,7 +75,7 @@ namespace MedManager.Infrastructure.Database
             try
             {
                 Console.WriteLine("🔍 Vérification de la table MedicineComponents...");
-                
+
                 // Créer la table directement, MySQL ignore si elle existe déjà
                 await context.Database.ExecuteSqlRawAsync(@"
                     CREATE TABLE IF NOT EXISTS `MedicineComponents` (
@@ -90,7 +111,7 @@ namespace MedManager.Infrastructure.Database
             try
             {
                 Console.WriteLine("🔍 Vérification de la table MedicalHistories...");
-                
+
                 // Créer la table directement, MySQL ignore si elle existe déjà
                 await context.Database.ExecuteSqlRawAsync(@"
                     CREATE TABLE IF NOT EXISTS `MedicalHistories` (

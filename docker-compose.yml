@@ -11,13 +11,15 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      CONNECTION_STRING: server=db;port=3306;database=${MYSQL_DATABASE:-medmanager};user=root;password=${MYSQL_ROOT_PASSWORD}
+      CONNECTION_STRING: ${CONNECTION_STRING:-server=db;port=3306;database=${MYSQL_DATABASE:-medmanager};user=root;password=${MYSQL_ROOT_PASSWORD:-medmanager}}
+      DB_INIT_MAX_RETRIES: ${DB_INIT_MAX_RETRIES:-10}
+      DB_INIT_RETRY_DELAY_SECONDS: ${DB_INIT_RETRY_DELAY_SECONDS:-5}
 
   db:
     image: mariadb:11
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-medmanager}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-medmanager}
     healthcheck:
       test:
