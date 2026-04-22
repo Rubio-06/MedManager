@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+
 using MedManager.Domain.Models;
 using MedManager.Domain.Models.Tables;
 using MedManager.Domain.Models.Users;
@@ -89,7 +90,7 @@ namespace MedManager.Infrastructure.Context
 
             builder.Entity<MedicineAllergy>()
                 .HasOne(ma => ma.Allergy)
-                .WithMany()
+                .WithMany(a => a.MedicineAllergies)
                 .HasForeignKey(ma => ma.AllergyId)
                 .OnDelete(DeleteBehavior.Cascade);
 

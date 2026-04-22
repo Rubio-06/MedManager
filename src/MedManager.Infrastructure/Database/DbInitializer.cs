@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+using System.Data;
+
 using MedManager.Domain.Models;
 using MedManager.Domain.Models.Users;
 using MedManager.Infrastructure.Context;
@@ -70,6 +72,48 @@ namespace MedManager.Infrastructure.Database
             return int.TryParse(value, out var parsedValue) ? parsedValue : fallback;
         }
 
+        private static async Task<bool> IndexExistsAsync(DatabaseContext context, string tableName, string indexName)
+        {
+            var connection = context.Database.GetDbConnection();
+            var wasClosed = connection.State != ConnectionState.Open;
+
+            if (wasClosed)
+            {
+                await connection.OpenAsync();
+            }
+
+            try
+            {
+                await using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT COUNT(1)
+                    FROM INFORMATION_SCHEMA.STATISTICS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = @tableName
+                      AND INDEX_NAME = @indexName;";
+
+                var tableParam = command.CreateParameter();
+                tableParam.ParameterName = "@tableName";
+                tableParam.Value = tableName;
+                command.Parameters.Add(tableParam);
+
+                var indexParam = command.CreateParameter();
+                indexParam.ParameterName = "@indexName";
+                indexParam.Value = indexName;
+                command.Parameters.Add(indexParam);
+
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result) > 0;
+            }
+            finally
+            {
+                if (wasClosed)
+                {
+                    await connection.CloseAsync();
+                }
+            }
+        }
+
         private static async Task EnsureMedicineComponentsTableExists(DatabaseContext context)
         {
             try
@@ -91,11 +135,14 @@ namespace MedManager.Infrastructure.Database
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
                 ");
 
-                // Créer l'index
-                await context.Database.ExecuteSqlRawAsync(@"
-                    CREATE INDEX IF NOT EXISTS `IX_MedicineComponents_MedicineId` 
-                    ON `MedicineComponents` (`MedicineId`);
-                ");
+                // MySQL ne supporte pas CREATE INDEX IF NOT EXISTS.
+                if (!await IndexExistsAsync(context, "MedicineComponents", "IX_MedicineComponents_MedicineId"))
+                {
+                    await context.Database.ExecuteSqlRawAsync(@"
+                        CREATE INDEX `IX_MedicineComponents_MedicineId`
+                        ON `MedicineComponents` (`MedicineId`);
+                    ");
+                }
 
                 Console.WriteLine("✓ Table MedicineComponents OK");
             }
@@ -132,11 +179,14 @@ namespace MedManager.Infrastructure.Database
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
                 ");
 
-                // Créer l'index
-                await context.Database.ExecuteSqlRawAsync(@"
-                    CREATE INDEX IF NOT EXISTS `IX_MedicalHistories_PatientId` 
-                    ON `MedicalHistories` (`PatientId`);
-                ");
+                // MySQL ne supporte pas CREATE INDEX IF NOT EXISTS.
+                if (!await IndexExistsAsync(context, "MedicalHistories", "IX_MedicalHistories_PatientId"))
+                {
+                    await context.Database.ExecuteSqlRawAsync(@"
+                        CREATE INDEX `IX_MedicalHistories_PatientId`
+                        ON `MedicalHistories` (`PatientId`);
+                    ");
+                }
 
                 Console.WriteLine("✓ Table MedicalHistories OK");
             }
