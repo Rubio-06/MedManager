@@ -72,6 +72,12 @@ namespace MedManager.Infrastructure.Database
             return int.TryParse(value, out var parsedValue) ? parsedValue : fallback;
         }
 
+        private static bool GetBoolEnvironmentVariable(string name, bool fallback)
+        {
+            var value = Environment.GetEnvironmentVariable(name);
+            return bool.TryParse(value, out var parsedValue) ? parsedValue : fallback;
+        }
+
         private static async Task<bool> IndexExistsAsync(DatabaseContext context, string tableName, string indexName)
         {
             var connection = context.Database.GetDbConnection();
@@ -230,11 +236,19 @@ namespace MedManager.Infrastructure.Database
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager)
         {
-            // Seed roles only for production (no test data)
+            // Always ensure base roles exist.
             await SeedRoles(roleManager);
 
-            // Production should not have seeded data except for essential configurations
-            // TODO: Add production-specific configurations if needed
+            // In this project, login page exposes demo credentials.
+            // Keep these users in production unless explicitly disabled.
+            var seedDemoUsers = GetBoolEnvironmentVariable("SEED_DEMO_USERS", true);
+            if (!seedDemoUsers)
+            {
+                await context.SaveChangesAsync();
+                return;
+            }
+
+            await SeedData.DevelopmentSeedData.SeedAsync(context, userManager, roleManager);
 
             await context.SaveChangesAsync();
         }
