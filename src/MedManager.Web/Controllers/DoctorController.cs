@@ -52,11 +52,73 @@ namespace MedManager.Web.Controllers
 
             var doctor = await _context.Doctors
                 .Include(d => d.Patients)
-                    .ThenInclude(p => p.PatientAllergies)
                 .Include(d => d.Prescriptions)
                 .FirstOrDefaultAsync(d => d.Id == doctorId.Value);
 
-            return View(doctor);
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            // Split patients by age ranges
+            var ageRanges = new Dictionary<string, int>
+            {
+                { "0-18 ans", doctor.Patients.Count(p => CalculateAge(p.DateBirthday) <= 18) },
+                { "19-60 ans", doctor.Patients.Count(p => CalculateAge(p.DateBirthday) >= 19 && CalculateAge(p.DateBirthday) <= 60) },
+                { "60+ ans", doctor.Patients.Count(p => CalculateAge(p.DateBirthday) > 60) }
+            };
+
+            // Prescription in the last 12 months
+            var prescriptionsByMonth = new Dictionary<string, int>();
+            var today = DateTime.Now;
+
+            for (int i = 11; i >= 0; i--)
+            {
+                var monthDate = today.AddMonths(-i);
+                var monthKey = monthDate.ToString("MMM yyyy", new System.Globalization.CultureInfo("fr-FR"));
+                var count = doctor.Prescriptions.Count(p =>
+                    p.DateCreated.Month == monthDate.Month &&
+                    p.DateCreated.Year == monthDate.Year);
+
+                prescriptionsByMonth[monthKey] = count;
+            }
+
+            // Top 10 medicines prescribed this month
+            var startOfMonth = new DateTime(today.Year, today.Month, 1);
+            var topMedicines = await _context.PrescriptionMedicines
+                .Include(pm => pm.Prescription)
+                .Include(pm => pm.Medicine)
+                .Where(pm => pm.Prescription.DoctorId == doctorId.Value &&
+                            pm.Prescription.DateCreated >= startOfMonth)
+                .GroupBy(pm => new { pm.MedicineId, pm.Medicine.Name })
+                .Select(g => new TopMedicineViewModel
+                {
+                    MedicineName = g.Key.Name,
+                    PrescriptionCount = g.Count()
+                })
+                .OrderByDescending(m => m.PrescriptionCount)
+                .Take(10)
+                .ToListAsync();
+
+            // ViewModel with all data needed for the dashboard
+            var viewModel = new DoctorDashboardViewModel
+            {
+                DoctorId = doctor.Id,
+                DoctorFirstName = doctor.FirstName,
+                DoctorLastName = doctor.LastName,
+                TotalPatients = doctor.Patients.Count,
+                TotalPrescriptions = doctor.Prescriptions.Count,
+                PrescriptionsThisMonth = doctor.Prescriptions.Count(p =>
+                    p.DateCreated.Month == DateTime.Now.Month &&
+                    p.DateCreated.Year == DateTime.Now.Year),
+                MalePatients = doctor.Patients.Count(p => p.Gender == Gender.Male),
+                FemalePatients = doctor.Patients.Count(p => p.Gender == Gender.Female),
+                AgeRanges = ageRanges,
+                PrescriptionsByMonth = prescriptionsByMonth,
+                TopMedicinesThisMonth = topMedicines
+            };
+
+            return View(viewModel);
         }
 
         #region Patient Management
@@ -599,22 +661,20 @@ namespace MedManager.Web.Controllers
                 .Include(m => m.MedicineAllergies)
                 .OrderBy(m => m.Name)
                 .ToListAsync();
-            
+
             viewModel.AvailableMedicines = medicines.Select(m =>
             {
                 bool hasAllergyConflict = false;
-                
+
                 if (patient != null)
                 {
-                    // Vérifier les allergies directes (table MedicineAllergies)
-                    hasAllergyConflict = m.MedicineAllergies.Any(ma => 
+                    hasAllergyConflict = m.MedicineAllergies.Any(ma =>
                         patient.PatientAllergies.Any(pa => pa.AllergyId == ma.AllergyId));
-                    
-                    // Si pas de conflit direct, vérifier les composants
+
                     if (!hasAllergyConflict)
                     {
-                        hasAllergyConflict = m.Components.Any(comp => 
-                            patient.PatientAllergies.Any(pa => 
+                        hasAllergyConflict = m.Components.Any(comp =>
+                            patient.PatientAllergies.Any(pa =>
                                 pa.Allergy.Name.Equals(comp.Name, StringComparison.OrdinalIgnoreCase) ||
                                 comp.Name.Contains(pa.Allergy.Name, StringComparison.OrdinalIgnoreCase)));
                     }
@@ -643,7 +703,6 @@ namespace MedManager.Web.Controllers
                 return RedirectToAction("AccessDenied", "Account");
             }
 
-            // Désérialiser les médicaments depuis JSON
             List<PrescriptionMedicineDto>? medicinesList = null;
             try
             {
@@ -705,7 +764,7 @@ namespace MedManager.Web.Controllers
                 // Vérifier si un composant du médicament correspond à une allergie du patient
                 foreach (var component in medicine.Components)
                 {
-                    var componentMatchesAllergy = patient.PatientAllergies.Any(pa => 
+                    var componentMatchesAllergy = patient.PatientAllergies.Any(pa =>
                         pa.Allergy.Name.Equals(component.Name, StringComparison.OrdinalIgnoreCase) ||
                         component.Name.Contains(pa.Allergy.Name, StringComparison.OrdinalIgnoreCase));
 
@@ -867,9 +926,10 @@ namespace MedManager.Web.Controllers
                     firstName = p.FirstName,
                     lastName = p.LastName,
                     email = p.User.Email,
-                    allergies = p.PatientAllergies.Select(pa => new { 
-                        id = pa.AllergyId, 
-                        name = pa.Allergy.Name 
+                    allergies = p.PatientAllergies.Select(pa => new
+                    {
+                        id = pa.AllergyId,
+                        name = pa.Allergy.Name
                     }).ToList()
                 })
                 .ToListAsync();
@@ -883,7 +943,7 @@ namespace MedManager.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddMedicalHistory([FromForm] int patientId, [FromForm] string type, 
+        public async Task<IActionResult> AddMedicalHistory([FromForm] int patientId, [FromForm] string type,
             [FromForm] string title, [FromForm] string description, [FromForm] DateTime date, [FromForm] string severity)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
@@ -929,8 +989,8 @@ namespace MedManager.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateMedicalHistory([FromForm] int id, [FromForm] int patientId, 
-            [FromForm] string type, [FromForm] string title, [FromForm] string description, 
+        public async Task<IActionResult> UpdateMedicalHistory([FromForm] int id, [FromForm] int patientId,
+            [FromForm] string type, [FromForm] string title, [FromForm] string description,
             [FromForm] DateTime date, [FromForm] string severity)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
