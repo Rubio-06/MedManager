@@ -25,6 +25,9 @@ namespace MedManager.Domain.Models
         // Components (composition)
         public virtual ICollection<MedicineComponent> Components { get; set; } = [];
 
+        // Molecules (many-to-many)
+        public virtual ICollection<MedicineMolecule> MedicineMolecules { get; set; } = [];
+
         // Associated Tables (n-n)
         public virtual ICollection<PrescriptionMedicine> PrescriptionMedicines { get; set; } = [];
         public virtual ICollection<MedicineAllergy> MedicineAllergies { get; set; } = [];

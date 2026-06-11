@@ -123,7 +123,7 @@
 </div>
 
 <!-- Modal Ajouter Médicament -->
-<div id="medicineModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+<div id="medicineModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4" style="display: none;">
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         <!-- Header Modal -->
         <div class="bg-indigo-600 text-white px-6 py-4 flex items-center justify-between">
@@ -221,7 +221,7 @@
         let medicines = [];
 
         function openMedicineModal() {
-            document.getElementById('medicineModal').classList.remove('hidden');
+            document.getElementById('medicineModal').style.display = 'flex';
             document.getElementById('medicineSearch').value = '';
             document.getElementById('medicineDetailsForm').style.display = 'none';
             document.getElementById('addMedicineBtn').disabled = true;
@@ -229,7 +229,7 @@
         }
 
         function closeMedicineModal() {
-            document.getElementById('medicineModal').classList.add('hidden');
+            document.getElementById('medicineModal').style.display = 'none';
         }
 
         function filterMedicines() {

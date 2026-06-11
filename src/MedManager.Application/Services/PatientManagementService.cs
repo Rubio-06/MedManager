@@ -130,6 +130,14 @@ namespace MedManager.Application.Services
                 return (false, new[] { "Un utilisateur avec cet email existe déjà." });
             }
 
+            var socialSecurityNumberExists = await _context.Patients
+                .AnyAsync(p => p.SocialSecurityNumber == dto.SocialSecurityNumber);
+
+            if (socialSecurityNumberExists)
+            {
+                return (false, new[] { "Ce numéro de sécurité sociale existe déjà." });
+            }
+
             // Créer l'utilisateur
             var user = new ApplicationUser
             {
@@ -185,6 +193,14 @@ namespace MedManager.Application.Services
                 {
                     return (false, new[] { "Cet email est déjà utilisé par un autre utilisateur." });
                 }
+            }
+
+            var socialSecurityNumberExists = await _context.Patients
+                .AnyAsync(p => p.SocialSecurityNumber == dto.SocialSecurityNumber && p.Id != dto.Id);
+
+            if (socialSecurityNumberExists)
+            {
+                return (false, new[] { "Ce numéro de sécurité sociale existe déjà." });
             }
 
             // Mettre à jour l'utilisateur

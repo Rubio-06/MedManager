@@ -87,6 +87,99 @@ Si le seed de démo est activé, tu auras :
 
 Le seed ajoute aussi les allergies et les médicaments de démonstration.
 
+## Créer un admin manuellement en SQL
+
+Si tu veux partir de zero sans seed, tu peux créer un compte admin a la main.
+
+Important: `PasswordHash` ne peut pas etre un mot de passe en clair. Il faut un hash ASP.NET Identity.
+
+### 1) Generer un hash de mot de passe
+
+Le plus simple est d'utiliser temporairement le seed (`SEED_DEMO_USERS=true`), puis de copier la valeur `PasswordHash` de l'utilisateur admin depuis `AspNetUsers`.
+
+Exemple pour lire le hash actuel:
+
+```sql
+SELECT Id, Email, PasswordHash
+FROM AspNetUsers
+WHERE Email = 'admin@medmanager.com';
+```
+
+### 2) Requete SQL pour creer le role + user + liaison admin
+
+Remplace la valeur `__PASSWORD_HASH__` avant execution.
+
+```sql
+START TRANSACTION;
+
+-- 1) Role Admin
+INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp)
+SELECT UUID(), 'Admin', 'ADMIN', UUID()
+WHERE NOT EXISTS (
+	SELECT 1 FROM AspNetRoles WHERE NormalizedName = 'ADMIN'
+);
+
+SET @roleId = (SELECT Id FROM AspNetRoles WHERE NormalizedName = 'ADMIN' LIMIT 1);
+
+-- 2) User admin
+SET @newUserId = UUID();
+
+INSERT INTO AspNetUsers (
+	Id,
+	UserName,
+	NormalizedUserName,
+	Email,
+	NormalizedEmail,
+	EmailConfirmed,
+	PasswordHash,
+	SecurityStamp,
+	ConcurrencyStamp,
+	PhoneNumberConfirmed,
+	TwoFactorEnabled,
+	LockoutEnabled,
+	AccessFailedCount
+)
+SELECT
+	@newUserId,
+	'admin@medmanager.com',
+	'ADMIN@MEDMANAGER.COM',
+	'admin@medmanager.com',
+	'ADMIN@MEDMANAGER.COM',
+	1,
+	'__PASSWORD_HASH__',
+	UUID(),
+	UUID(),
+	0,
+	0,
+	1,
+	0
+WHERE NOT EXISTS (
+	SELECT 1 FROM AspNetUsers WHERE NormalizedEmail = 'ADMIN@MEDMANAGER.COM'
+);
+
+SET @userId = (SELECT Id FROM AspNetUsers WHERE NormalizedEmail = 'ADMIN@MEDMANAGER.COM' LIMIT 1);
+
+-- 3) Lien user-role
+INSERT IGNORE INTO AspNetUserRoles (UserId, RoleId)
+VALUES (@userId, @roleId);
+
+-- 4) Entite metier Admin dans Persons (TPH)
+INSERT INTO Persons (
+	FirstName,
+	LastName,
+	ApplicationUserId,
+	PersonType
+)
+SELECT 'Admin', 'System', @userId, 'Admin'
+WHERE NOT EXISTS (
+	SELECT 1 FROM Persons WHERE ApplicationUserId = @userId
+);
+
+COMMIT;
+```
+
+Apres execution, connecte-toi avec l'email admin et le mot de passe correspondant au hash que tu as utilise.
+
 ## Lancer en local sans Docker
 
 Si tu veux tester en local:
