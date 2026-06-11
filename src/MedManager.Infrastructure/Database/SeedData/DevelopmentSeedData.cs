@@ -23,27 +23,27 @@ namespace MedManager.Infrastructure.Database.SeedData
                 Console.WriteLine("📋 1/6 - Seed des allergies...");
                 await AllergySeed.SeedAsync(context);
                 Console.WriteLine("✓ Allergies créées");
-                
+
                 // 2. Médicaments avec leurs composants (indépendants)
                 Console.WriteLine("💊 2/6 - Seed des médicaments...");
-                await MedicineSeed.SeedAsync(context);
+                await MedicineSeed.SeedUpdateAsync(context);
                 Console.WriteLine("✓ Médicaments créés");
-                
+
                 // 3. Associations médicament-allergie (dépend de 1 et 2)
                 Console.WriteLine("🔗 3/6 - Seed des associations médicament-allergie...");
                 await MedicineSeed.SeedMedicineAllergiesAsync(context);
                 Console.WriteLine("✓ Associations créées");
-                
+
                 // 4. Admin (indépendant)
                 Console.WriteLine("👑 4/6 - Seed de l'admin...");
                 await AdminSeed.SeedAsync(context, userManager);
                 Console.WriteLine("✓ Admin créé");
-                
+
                 // 5. Docteurs (indépendants)
                 Console.WriteLine("👨‍⚕️ 5/6 - Seed des docteurs...");
                 await DoctorSeed.SeedAsync(context, userManager);
                 Console.WriteLine("✓ Docteurs créés");
-                
+
                 // 6. Patients (dépend des docteurs et allergies)
                 Console.WriteLine("👥 6/6 - Seed des patients...");
                 await PatientSeed.SeedAsync(context, userManager);
@@ -62,14 +62,14 @@ namespace MedManager.Infrastructure.Database.SeedData
                 Console.WriteLine("========================================");
                 Console.WriteLine($"Message: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                
+
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
-                
+
                 Console.WriteLine("========================================");
-                
+
                 // NE PAS throw pour ne pas bloquer le démarrage
                 // L'utilisateur verra l'erreur dans les logs
             }

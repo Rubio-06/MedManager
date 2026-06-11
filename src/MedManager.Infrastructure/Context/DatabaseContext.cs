@@ -20,6 +20,7 @@ namespace MedManager.Infrastructure.Context
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Medicine> Medicines { get; set; }
+        public DbSet<Molecule> Molecules { get; set; }
         public DbSet<MedicineComponent> MedicineComponents { get; set; }
         public DbSet<Allergy> Allergies { get; set; }
         public DbSet<History> Histories { get; set; }
@@ -27,6 +28,7 @@ namespace MedManager.Infrastructure.Context
         public DbSet<MedicalHistory> MedicalHistories { get; set; }
 
         // DbSets for junction tables (many-to-many relationships)
+        public DbSet<MedicineMolecule> MedicineMolecules { get; set; }
         public DbSet<MedicineAllergy> MedicineAllergies { get; set; }
         public DbSet<MedicineHistory> MedicineHistories { get; set; }
         public DbSet<PatientAllergy> PatientAllergies { get; set; }
@@ -77,6 +79,19 @@ namespace MedManager.Infrastructure.Context
                 .HasOne(mc => mc.Medicine)
                 .WithMany(m => m.Components)
                 .HasForeignKey(mc => mc.MedicineId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Medicine <-> Molecule relationship
+            builder.Entity<MedicineMolecule>()
+                .HasOne(mm => mm.Medicine)
+                .WithMany(m => m.MedicineMolecules)
+                .HasForeignKey(mm => mm.MedicineId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<MedicineMolecule>()
+                .HasOne(mm => mm.Molecule)
+                .WithMany(m => m.MedicineMolecules)
+                .HasForeignKey(mm => mm.MoleculeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure many-to-many relationships using junction tables
@@ -160,6 +175,10 @@ namespace MedManager.Infrastructure.Context
 
             builder.Entity<Medicine>()
                 .HasIndex(m => m.Name);
+
+            builder.Entity<Molecule>()
+                .HasIndex(m => m.Name)
+                .IsUnique();
 
             builder.Entity<Allergy>()
                 .HasIndex(a => a.Name);

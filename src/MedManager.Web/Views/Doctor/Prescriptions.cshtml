@@ -98,48 +98,44 @@
     </div>
 
     <!-- Modal de sélection de patient -->
-    <div id="patientSelectionModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Overlay -->
-            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true" onclick="closePatientSelectionModal()"></div>
+    <div id="patientSelectionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target.id==='patientSelectionModal'){closePatientSelectionModal();}">
+        <div class="absolute inset-0 bg-slate-700/70"></div>
 
-            <!-- Modal panel -->
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full" onclick="event.stopPropagation()">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            Sélectionner un patient
-                        </h3>
-                        <button type="button" onclick="closePatientSelectionModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Barre de recherche -->
-                    <div class="mb-4">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                </svg>
-                            </div>
-                            <input type="text" 
-                                   id="patientSearchInput" 
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
-                                   placeholder="Rechercher un patient (nom, prénom, email)...">
-                        </div>
-                    </div>
-
-                    <!-- Liste des patients -->
-                    <div class="max-h-96 overflow-y-auto" id="patientsList">
-                        <p class="text-center text-gray-500 py-8">Chargement des patients...</p>
-                    </div>
+        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+            <div class="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900" id="modal-title">Sélectionner un patient</h3>
+                    <p class="text-sm text-gray-500 mt-1">Choisissez un patient pour créer sa nouvelle ordonnance.</p>
                 </div>
+                <button type="button" onclick="closePatientSelectionModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Fermer la sélection de patient">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <div class="relative mb-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           id="patientSearchInput"
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+                           placeholder="Rechercher un patient (nom, prénom, email)...">
+                </div>
+
+                <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg" id="patientsList">
+                    <p class="text-center text-gray-500 py-8">Chargement des patients...</p>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+                <button type="button" onclick="closePatientSelectionModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150 font-medium">
+                    Retour
+                </button>
             </div>
         </div>
     </div>
@@ -256,6 +252,8 @@
         // Variables globales pour les filtres
         let currentSort = 'desc';
         let allPatients = [];
+        let patientsLoaded = false;
+        const createPrescriptionUrl = '@Url.Action("CreatePrescription", "Doctor")';
 
         // Fonction de suppression d'ordonnance
         function deletePrescription(prescriptionId, date, patientName) {
@@ -405,23 +403,49 @@
         function openPatientSelectionModal() {
             const modal = document.getElementById('patientSelectionModal');
             modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
             loadPatients();
+
+            const searchInput = document.getElementById('patientSearchInput');
+            if (searchInput) {
+                searchInput.focus();
+            }
         }
 
         function closePatientSelectionModal() {
             const modal = document.getElementById('patientSelectionModal');
             modal.classList.add('hidden');
-            document.getElementById('patientSearchInput').value = '';
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+
+            const searchInput = document.getElementById('patientSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+
+            renderPatients(allPatients);
         }
 
         function loadPatients() {
+            if (patientsLoaded && allPatients.length > 0) {
+                renderPatients(allPatients);
+                return;
+            }
+
             const patientsList = document.getElementById('patientsList');
             patientsList.innerHTML = '<p class="text-center text-gray-500 py-8">Chargement des patients...</p>';
 
             fetch('@Url.Action("GetDoctorPatients", "Doctor")')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Réponse serveur invalide');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     allPatients = data;
+                    patientsLoaded = true;
                     renderPatients(data);
                 })
                 .catch(error => {
@@ -446,8 +470,8 @@
             }
 
             patientsList.innerHTML = patients.map(patient => `
-                <div class="border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer" onclick="selectPatient(${patient.id})">
-                    <div class="px-4 py-3 flex items-center justify-between">
+                <div class="border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors">
+                    <div class="px-4 py-3 flex items-center justify-between gap-3">
                         <div class="flex items-center flex-1">
                             <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                                 <span class="text-indigo-600 font-semibold text-sm">${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}</span>
@@ -466,9 +490,12 @@
                                     ${patient.allergies.length} allergie(s)
                                 </span>
                             ` : ''}
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
+                            <button type="button" onclick="selectPatient(${patient.id})" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition duration-150">
+                                Sélectionner
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -476,27 +503,43 @@
         }
 
         function selectPatient(patientId) {
-            window.location.href = '@Url.Action("CreatePrescription", "Doctor")?patientId=' + patientId;
+            window.location.href = `${createPrescriptionUrl}?patientId=${patientId}`;
+        }
+
+        function filterPatients() {
+            const searchInput = document.getElementById('patientSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            if (searchTerm === '') {
+                renderPatients(allPatients);
+                return;
+            }
+
+            const filtered = allPatients.filter(patient => {
+                const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
+                const email = (patient.email || '').toLowerCase();
+                return fullName.includes(searchTerm) || email.includes(searchTerm);
+            });
+
+            renderPatients(filtered);
         }
 
         // Filtrer les patients dans la modal
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('patientSearchInput');
             if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.toLowerCase().trim();
-                    if (searchTerm === '') {
-                        renderPatients(allPatients);
-                    } else {
-                        const filtered = allPatients.filter(patient => {
-                            const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-                            const email = (patient.email || '').toLowerCase();
-                            return fullName.includes(searchTerm) || email.includes(searchTerm);
-                        });
-                        renderPatients(filtered);
-                    }
-                });
+                searchInput.addEventListener('input', filterPatients);
             }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('patientSelectionModal');
+                    if (modal && !modal.classList.contains('hidden')) {
+                        closePatientSelectionModal();
+                    }
+                }
+            });
+
         });
     </script>
 }

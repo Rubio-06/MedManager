@@ -43,7 +43,7 @@ namespace MedManager.Infrastructure.Database.SeedData
             await SeedRoles(roleManager);
 
             await AllergySeed.SeedAsync(context);
-            await MedicineSeed.SeedAsync(context);
+            await MedicineSeed.SeedUpdateAsync(context);
             await MedicineSeed.SeedMedicineAllergiesAsync(context);
 
             await EnsureAdminAsync(context, userManager);

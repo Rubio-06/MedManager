@@ -161,6 +161,7 @@ namespace MedManager.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["WarningMessage"] = "Veuillez corriger les champs du formulaire.";
                 return View(model);
             }
 
@@ -182,17 +183,21 @@ namespace MedManager.Web.Controllers
                 DoctorId = doctorId.Value
             };
 
-            var (success, errors) = await _patientManagementService.CreatePatientAsync(dto);
-
-            if (success)
+            try
             {
-                TempData["SuccessMessage"] = "Patient créé avec succès.";
-                return RedirectToAction(nameof(Patients));
+                var (success, errors) = await _patientManagementService.CreatePatientAsync(dto);
+
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Patient créé avec succès.";
+                    return RedirectToAction(nameof(Patients));
+                }
+
+                TempData["ErrorMessage"] = string.Join(" ", errors);
             }
-
-            foreach (var error in errors)
+            catch
             {
-                ModelState.AddModelError("", error);
+                TempData["ErrorMessage"] = "Une erreur est survenue lors de la création du patient.";
             }
 
             return View(model);
@@ -235,6 +240,7 @@ namespace MedManager.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["WarningMessage"] = "Veuillez corriger les champs du formulaire.";
                 return View(model);
             }
 
@@ -257,17 +263,21 @@ namespace MedManager.Web.Controllers
                 EmailConfirmed = model.EmailConfirmed
             };
 
-            var (success, errors) = await _patientManagementService.UpdatePatientAsync(dto, doctorId.Value);
-
-            if (success)
+            try
             {
-                TempData["SuccessMessage"] = "Patient mis à jour avec succès.";
-                return RedirectToAction(nameof(Patients));
+                var (success, errors) = await _patientManagementService.UpdatePatientAsync(dto, doctorId.Value);
+
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Patient mis à jour avec succès.";
+                    return RedirectToAction(nameof(Patients));
+                }
+
+                TempData["ErrorMessage"] = string.Join(" ", errors);
             }
-
-            foreach (var error in errors)
+            catch
             {
-                ModelState.AddModelError("", error);
+                TempData["ErrorMessage"] = "Une erreur est survenue lors de la mise à jour du patient.";
             }
 
             return View(model);
@@ -601,6 +611,12 @@ namespace MedManager.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> CreatePrescription(int? patientId)
         {
+            if (!patientId.HasValue)
+            {
+                TempData["InfoMessage"] = "Veuillez sélectionner un patient pour créer une ordonnance.";
+                return RedirectToAction(nameof(Prescriptions));
+            }
+
             var doctorId = await GetCurrentDoctorIdAsync();
             if (doctorId == null)
             {
@@ -625,35 +641,31 @@ namespace MedManager.Web.Controllers
 
             Patient? patient = null;
 
-            // Si patientId est fourni, charger les infos du patient
-            if (patientId.HasValue)
+            patient = await _context.Patients
+                .Include(p => p.User)
+                .Include(p => p.PatientAllergies)
+                    .ThenInclude(pa => pa.Allergy)
+                .FirstOrDefaultAsync(p => p.Id == patientId.Value && p.DoctorId == doctorId.Value);
+
+            if (patient == null)
             {
-                patient = await _context.Patients
-                    .Include(p => p.User)
-                    .Include(p => p.PatientAllergies)
-                        .ThenInclude(pa => pa.Allergy)
-                    .FirstOrDefaultAsync(p => p.Id == patientId.Value && p.DoctorId == doctorId.Value);
-
-                if (patient == null)
-                {
-                    return NotFound();
-                }
-
-                viewModel.PatientId = patient.Id;
-                viewModel.PatientFirstName = patient.FirstName;
-                viewModel.PatientLastName = patient.LastName;
-                viewModel.PatientEmail = patient.User.Email ?? "";
-                viewModel.PatientAge = CalculateAge(patient.DateBirthday);
-                viewModel.PatientGender = patient.Gender == MedManager.Domain.Models.Users.Gender.Male ? "Homme" : "Femme";
-                viewModel.SocialSecurityNumber = patient.SocialSecurityNumber;
-
-                // Charger les allergies du patient
-                viewModel.PatientAllergies = patient.PatientAllergies.Select(pa => new PatientAllergyViewModel
-                {
-                    Id = pa.AllergyId,
-                    Name = pa.Allergy.Name
-                }).ToList();
+                return NotFound();
             }
+
+            viewModel.PatientId = patient.Id;
+            viewModel.PatientFirstName = patient.FirstName;
+            viewModel.PatientLastName = patient.LastName;
+            viewModel.PatientEmail = patient.User.Email ?? "";
+            viewModel.PatientAge = CalculateAge(patient.DateBirthday);
+            viewModel.PatientGender = patient.Gender == MedManager.Domain.Models.Users.Gender.Male ? "Homme" : "Femme";
+            viewModel.SocialSecurityNumber = patient.SocialSecurityNumber;
+
+            // Charger les allergies du patient
+            viewModel.PatientAllergies = patient.PatientAllergies.Select(pa => new PatientAllergyViewModel
+            {
+                Id = pa.AllergyId,
+                Name = pa.Allergy.Name
+            }).ToList();
 
             // Charger tous les médicaments disponibles
             var medicines = await _context.Medicines
